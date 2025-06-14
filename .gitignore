@@ -1,0 +1,7 @@
+/doc/html/
+/doc/latex
+/build/
+/dotnamebackup/
+Solution.log
+CMakeUserPresets.json
+
