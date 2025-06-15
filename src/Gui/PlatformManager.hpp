@@ -4,6 +4,7 @@
 #include <Assets/AssetContext.hpp>
 #include <Logger/Logger.hpp>
 #include <Utils/Utils.hpp>
+#include <Gui/TextureTools.hpp>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -18,8 +19,6 @@
   #include <GL/glew.h>
 #endif
 
-#include <stb_image.h>
-
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 
@@ -27,28 +26,32 @@ void initializePlatform ();
 void shutdownPlatform ();
 
 class PlatformManager {
+
 public:
   PlatformManager () = default;
   virtual ~PlatformManager () = default;
-  virtual void initialize () = 0;
-  virtual void shutdown () = 0;
 
 protected:
-  const float BASE_FONT_SIZE = 16.0f;
-  SDL_Window* window_ = nullptr;
   int windowWidth_ = 1920;
   int windowHeight_ = 1080;
-
+  const float BASE_FONT_SIZE = 16.0f;
   SDL_GLContext glContext_ = nullptr;
+  SDL_Window* window_ = nullptr;
   GLuint vao_, vbo_, ebo_, shaderProgram_;
-
   ImGuiContext* imguiContext_ = nullptr;
   ImGuiIO* io_;
   ImGuiStyle* style_;
   const char* glsl_version_ = "#version 130"; // Default GLSL version
 
-  virtual void createSDL2Window (const char* title, int width, int height) = 0;
+public:
+  virtual void initialize () = 0;
+  virtual void shutdown () = 0;
 
+protected:
+  virtual void createSDL2Window (const char* title, int width, int height) = 0;
+  virtual void updateWindowSize () = 0;
+
+protected:
   void decideOpenGLVersion ();
   virtual void createOpenGLContext () = 0;
   virtual void initializeGLEW () = 0;
@@ -57,16 +60,15 @@ protected:
   virtual GLuint compileShader (const char* shaderSource, GLenum shaderType) = 0;
   virtual void renderBackground (float deltaTime) = 0;
 
+protected:
   void setupImGuiStyle (ImGuiStyle& style);
   virtual void initializeImGui () = 0;
   virtual void scaleImGui () = 0;
 
+protected:
   void mainLoop ();
 
-  // void shutdownImGui ();
-  // void destroyWindow ();
-  // void destroyOpenGLContext ();
-
+protected:
   void handleSDLError (const char* message) const;
   void handleGLError (const char* message) const;
   void handleImGuiError (const char* message) const;
@@ -75,46 +77,4 @@ protected:
   void handleError (const char* message, int errorCode) const;
 };
 
-// X86
-class DesktopPlatform : public PlatformManager {
-public:
-  DesktopPlatform () = default;
-  ~DesktopPlatform () override = default;
-
-  void initialize () override;
-  void shutdown () override;
-  void createSDL2Window (const char* title, int width, int height) override;
-  void createOpenGLContext () override;
-  void setSwapInterval (int interval);
-  void initializeGLEW () override;
-  void setupShaders () override;
-  GLuint compileShader (const char* shaderSource, GLenum shaderType) override;
-  void renderBackground (float deltaTime) override;
-
-  void initializeImGui () override;
-  void scaleImGui () override;
-
-private:
-  float userConfigurableScale_ = 2.0f;
-};
-
-// WebAssembly TODO: Implement EmscriptenPlatform
-class EmscriptenPlatform : public PlatformManager {
-public:
-  EmscriptenPlatform () = default;
-  ~EmscriptenPlatform () override = default;
-
-  // void initialize () override;
-  // void shutdown () override;
-  // void createSDL2Window (const char* title, int width, int height) override;
-  // void createOpenGLContext () override;
-  // void initializeImGui () override;
-};
-
-namespace TextureLoader {
-  bool LoadTextureFromMemory (const void* data, size_t data_size, SDL_Renderer* renderer,
-                              SDL_Texture** out_texture, int* out_width, int* out_height);
-  bool LoadTextureFromFile (const std::filesystem::path& file_path, SDL_Renderer* renderer,
-                            SDL_Texture** out_texture, int* out_width, int* out_height);
-} // namespace TextureLoader
 #endif
