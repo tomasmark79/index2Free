@@ -1,21 +1,27 @@
 #include "PlatformManager.hpp"
 
+#include <Shaders/dyinguniverse/vertex_def.hpp>
+#include <Shaders/dyinguniverse/fragment_def.hpp>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
-  static EmscriptenPlatform platform;
-  platform.initialize ();
+  static EmscriptenPlatform pltf;
+  pltf.initialize ();
 #else
-  static DesktopPlatform platform;
-  platform.initialize ();
+  static DesktopPlatform pltf;
+  pltf.initialize ();
 #endif
 }
 void shutdownPlatform () {
 #if defined(__EMSCRIPTEN__)
-  static EmscriptenPlatform platform;
-  platform.shutdown ();
+  static EmscriptenPlatform pltf;
+  pltf.shutdown ();
 #else
-  static DesktopPlatform platform;
-  platform.shutdown ();
+  static DesktopPlatform pltf;
+  pltf.shutdown ();
 #endif
 }
 
@@ -83,6 +89,40 @@ void PlatformManager::decideOpenGLVersion () {
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
+}
+
+void PlatformManager::setupQuad () {
+
+  float vertices[] = {
+    // positions (x, y) - v rozmezí -1 až 1
+    -1.0f, -1.0f, // bottom left
+    1.0f,  -1.0f, // bottom right
+    1.0f,  1.0f,  // top right
+    -1.0f, 1.0f   // top left
+  };
+
+  unsigned int indices[] = {
+    0, 1, 2, // first triangle
+    2, 3, 0  // second triangle
+  };
+
+  glGenVertexArrays (1, &vao_);
+  glGenBuffers (1, &vbo_);
+  glGenBuffers (1, &ebo_);
+
+  glBindVertexArray (vao_);
+
+  glBindBuffer (GL_ARRAY_BUFFER, vbo_);
+  glBufferData (GL_ARRAY_BUFFER, sizeof (vertices), vertices, GL_STATIC_DRAW);
+
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_);
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices, GL_STATIC_DRAW);
+
+  // Vertex attribute (location = 0, 2 floats per vertex)
+  glEnableVertexAttribArray (0);
+  glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof (float), (void*)0);
+
+  glBindVertexArray (0);
 }
 
 void PlatformManager::setupImGuiStyle (ImGuiStyle& style) {
@@ -196,16 +236,6 @@ void PlatformManager::setupImGuiStyle (ImGuiStyle& style) {
   style_ = &style;
 }
 
-void DesktopPlatform::initialize () {
-  createSDL2Window ("Default SDL2 Window", 1920, 1080);
-  createOpenGLContext ();
-  initializeImGui ();
-  ImGuiStyle& style = ImGui::GetStyle ();
-  setupImGuiStyle (style);
-  scaleImGui ();
-  mainLoop ();
-}
-
 void DesktopPlatform::shutdown () {
   if (window_) {
     SDL_DestroyWindow (window_);
@@ -248,15 +278,127 @@ void DesktopPlatform::createSDL2Window (const char* title, int width, int height
   windowHeight_ = height;
 }
 
-
 void DesktopPlatform::createOpenGLContext () {
   decideOpenGLVersion ();
-
   glContext_ = SDL_GL_CreateContext (window_);
   if (!glContext_) {
     handleSDLError ("Failed to create OpenGL context");
   }
   SDL_GL_MakeCurrent (window_, glContext_);
+}
+
+void DesktopPlatform::setSwapInterval (int interval) {
+  SDL_GL_SetSwapInterval (interval); // vsync only on desktop
+}
+
+void DesktopPlatform::initializeGLEW () {
+
+#ifndef IMGUI_IMPL_OPENGL_ES2
+  if (glewInit () != GLEW_OK) {
+    printf ("Error initializing GLEW\n");
+    return;
+  }
+#endif
+}
+
+GLuint DesktopPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
+  GLuint shader = glCreateShader (shaderType);
+  if (shader == 0) {
+    handleGLError ("Failed to create shader");
+    return 0;
+  }
+
+  glShaderSource (shader, 1, &shaderSource, nullptr);
+  glCompileShader (shader);
+
+  // Check for compilation errors
+  GLint success;
+  glGetShaderiv (shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    GLint logLength;
+    glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
+    std::vector<char> infoLog (logLength);
+    glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
+    handleError ("Failed to compile shader", infoLog.data ());
+    glDeleteShader (shader);
+    return 0;
+  }
+
+  return shader;
+}
+
+void DesktopPlatform::renderBackground (float deltaTime) {
+  // float width = (float)windowWidth_;
+  // float height = (float)windowHeight_;
+  // glViewport (0, 0, width, height);
+  GLboolean depthTestEnabled;
+  glGetBooleanv (GL_DEPTH_TEST, &depthTestEnabled);
+  glDisable (GL_DEPTH_TEST);
+
+  glUseProgram (shaderProgram_);
+  glBindVertexArray (vao_);
+
+  GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
+  GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
+  GLint iTimeDeltaLoc = glGetUniformLocation (shaderProgram_, "iTimeDelta");
+  GLint iFrameLoc = glGetUniformLocation (shaderProgram_, "iFrame");
+  GLint iMouseLoc = glGetUniformLocation (shaderProgram_, "iMouse");
+
+  if (iResolutionLoc != -1)
+    glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
+  if (iTimeLoc != -1)
+    glUniform1f (iTimeLoc, deltaTime);
+  if (iTimeDeltaLoc != -1)
+    glUniform1f (iTimeDeltaLoc, 0.016f);
+  if (iFrameLoc != -1)
+    glUniform1i (iFrameLoc, (int)(deltaTime * 60.0f));
+  if (iMouseLoc != -1)
+    glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
+
+  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+  if (depthTestEnabled) {
+    glEnable (GL_DEPTH_TEST);
+  }
+}
+
+void DesktopPlatform::setupShaders () {
+  // Compile vertex shader
+  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
+  if (vertexShader == 0) {
+    handleError ("Failed to compile vertex shader");
+    return;
+  }
+
+  // Compile fragment shader
+  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
+  if (fragmentShader == 0) {
+    handleError ("Failed to compile fragment shader");
+    glDeleteShader (vertexShader);
+    return;
+  }
+
+  // Create shader program
+  shaderProgram_ = glCreateProgram ();
+  glAttachShader (shaderProgram_, vertexShader);
+  glAttachShader (shaderProgram_, fragmentShader);
+  glLinkProgram (shaderProgram_);
+
+  // Check for linking errors
+  GLint success;
+  glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
+  if (!success) {
+    handleError ("Failed to link shader program");
+    glDeleteShader (vertexShader);
+    glDeleteShader (fragmentShader);
+    return;
+  }
+
+  // Clean up shaders after linking
+  glDeleteShader (vertexShader);
+  glDeleteShader (fragmentShader);
+
+  // Setup VAO, VBO, EBO here if needed
 }
 
 void DesktopPlatform::initializeImGui () {
@@ -279,14 +421,14 @@ void DesktopPlatform::scaleImGui () {
   fontSize = std::max (1.0f, roundf (fontSize));
   ImFontConfig fontCfg = {};
   fontCfg.RasterizerDensity = scalingFactor;
-  static const ImWchar cz_ranges[]
+  static const ImWchar czRanges[]
       = { 0x0020, 0x00FF, 0x0100, 0x017F, 0x0200, 0x024F, 0x0401, 0x045F, 0x0402, 0x045F,
           0x0403, 0x045F, 0x0404, 0x045F, 0x0405, 0x045F, 0x0406, 0x045F, 0x0407, 0x045F,
           0x0408, 0x045F, 0x0409, 0x045F, 0x040A, 0x045F, 0x040B, 0x045F, 0x040C, 0x045F,
           0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
   std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
   io_->Fonts->Clear ();
-  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, cz_ranges);
+  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
 
   // Recreate font texture
@@ -298,6 +440,83 @@ void DesktopPlatform::scaleImGui () {
 
   // and then apply scaling
   ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
+}
+
+namespace TextureLoader {
+  bool LoadTextureFromMemory (const void* data, size_t data_size, SDL_Renderer* renderer,
+                              SDL_Texture** out_texture, int* out_width, int* out_height) {
+    int image_width = 0, image_height = 0, channels = 0;
+    unsigned char* image_data = stbi_load_from_memory (static_cast<const unsigned char*> (data),
+                                                       static_cast<int> (data_size), &image_width,
+                                                       &image_height, &channels, 4);
+    if (!image_data) {
+      LOG_E_FMT ("Failed to load image from memory: %s", stbi_failure_reason ());
+      return false;
+    }
+
+    SDL_Surface* surface
+        = SDL_CreateRGBSurfaceFrom (image_data, image_width, image_height, 32, 4 * image_width,
+                                    0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+    if (!surface) {
+      LOG_E_FMT ("Failed to create SDL surface: %s", SDL_GetError ());
+      stbi_image_free (image_data);
+      return false;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface (renderer, surface);
+    if (!texture) {
+      LOG_E_FMT ("Failed to create SDL texture: %s", SDL_GetError ());
+      SDL_FreeSurface (surface);
+      stbi_image_free (image_data);
+      return false;
+    }
+
+    *out_texture = texture;
+    *out_width = image_width;
+    *out_height = image_height;
+
+    SDL_FreeSurface (surface);
+    stbi_image_free (image_data);
+    return true;
+  }
+
+  bool LoadTextureFromFile (const std::filesystem::path& file_path, SDL_Renderer* renderer,
+                            SDL_Texture** out_texture, int* out_width, int* out_height) {
+    std::ifstream file (file_path, std::ios::binary | std::ios::ate);
+    if (!file) {
+      LOG_E_FMT ("Failed to open file: %s", file_path.string ().c_str ());
+      return false;
+    }
+    std::streamsize file_size = file.tellg ();
+    if (file_size <= 0) {
+      LOG_E_FMT ("File is empty or error reading file: %s", file_path.string ().c_str ());
+      return false;
+    }
+    file.seekg (0, std::ios::beg);
+
+    std::vector<unsigned char> buffer (static_cast<size_t> (file_size));
+    if (!file.read (reinterpret_cast<char*> (buffer.data ()), file_size)) {
+      LOG_E_FMT ("Failed to read file: %s", file_path.string ().c_str ());
+      return false;
+    }
+
+    return LoadTextureFromMemory (buffer.data (), buffer.size (), renderer, out_texture, out_width,
+                                  out_height);
+  }
+} // namespace TextureLoader
+
+void DesktopPlatform::initialize () {
+  createSDL2Window ("Default SDL2 Window", 1920, 1080);
+  createOpenGLContext ();
+  setSwapInterval (1); // Enable vsync
+  initializeGLEW ();
+  setupQuad ();
+  setupShaders ();
+  initializeImGui ();
+  ImGuiStyle& style = ImGui::GetStyle ();
+  setupImGuiStyle (style);
+  scaleImGui ();
+  mainLoop ();
 }
 
 void PlatformManager::mainLoop () {
@@ -319,56 +538,16 @@ void PlatformManager::mainLoop () {
     if (showDemo)
       ImGui::ShowDemoWindow (&showDemo);
 
-    // Render your GUI here
+    // Render GUI
     ImGui::Render ();
     glViewport (0, 0, windowWidth_, windowHeight_);
     glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
     glClear (GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
 
+    float time = SDL_GetTicks () / 1000.0f;
+    renderBackground (time);
+
+    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
     SDL_GL_SwapWindow (window_);
   }
 }
-
-// void EmscriptenPlatform::initialize () {
-//   createWindow ("Emscripten Window", 1920, 1080);
-// }
-
-// void EmscriptenPlatform::shutdown () {
-//   if (window_) {
-//     SDL_DestroyWindow (window_);
-//     window_ = nullptr;
-//   }
-//   if (glContext_) {
-//     SDL_GL_DeleteContext (glContext_);
-//     glContext_ = nullptr;
-//   }
-//   if (imguiContext_) {
-//     ImGui::DestroyContext (imguiContext_);
-//     imguiContext_ = nullptr;
-//   }
-// }
-
-// void EmscriptenPlatform::createOpenGLContext () {
-//   glContext_ = SDL_GL_CreateContext (window_);
-//   if (!glContext_) {
-//     handleSDLError ("Failed to create OpenGL context");
-//   }
-//   SDL_GL_MakeCurrent (window_, glContext_);
-// }
-
-// void EmscriptenPlatform::createWindow (const char* title, int width, int height) {
-//   window_ = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
-//                               height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-//   if (!window_) {
-//     handleSDLError ("Failed to create window");
-//   }
-//   windowWidth_ = width;
-//   windowHeight_ = height;
-// }
-
-// void EmscriptenPlatform::initializeImGui () {
-//   IMGUI_CHECKVERSION ();
-//   ImGui::CreateContext ();
-//   io_ = ImGui::GetIO ();
-// }

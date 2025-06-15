@@ -730,8 +730,8 @@ vec4 COOLCOLOR = vec4(1.,.5,0.,0.);
 vec4 HOTCOLOR = vec4(0.,0.1,1.,1.);
 vec4 MIDCOLOR = vec4(0.5,0.3,0.,1.);
 float STARSIZE = 0.03;
-#define NUM_STARS 2
-#define NUM_BOUNCES 3
+#define NUM_STARS 16
+#define NUM_BOUNCES 5
 #define FLOOR_REFLECT
 
 #define saturate(x) clamp(x,0.,1.)
