@@ -7,7 +7,7 @@
 Refactored public release of website [digitalspace.name](https://digitalspace.name).  
 
 Refactoring is in progress.  
-> 4% done.  
+> 20% done.  
 
 ## License
 
