@@ -150,6 +150,15 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
     PUBLIC $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
 
+# + stb_image dependencies
+CPMAddPackage(
+    NAME stb
+    GITHUB_REPOSITORY nothings/stb
+    GIT_TAG master)
+if(stb_ADDED)
+    target_include_directories(${LIBRARY_NAME} PRIVATE ${stb_SOURCE_DIR})
+endif()
+
 # ==============================================================================
 # Set compile options
 # ==============================================================================
