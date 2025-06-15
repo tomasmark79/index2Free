@@ -12,9 +12,7 @@
 #include "bindings/imgui_impl_sdl2.h"
 #include "imgui.h"
 
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-  #include <SDL_opengles2.h>
-#elif defined(IMGUI_IMPL_OPENGL_ES3)
+#if defined(IMGUI_IMPL_OPENGL_ES2) || defined(IMGUI_IMPL_OPENGL_ES3)
   #include <SDL_opengles2.h>
 #else
   #include <GL/glew.h>
