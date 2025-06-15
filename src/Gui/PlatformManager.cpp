@@ -1,9 +1,6 @@
 #include "PlatformManager.hpp"
 #include "DesktopPlatform.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
   static EmscriptenPlatform pltf;
