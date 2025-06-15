@@ -96,6 +96,45 @@ void DesktopPlatform::initializeGLEW () {
 #endif
 }
 
+void DesktopPlatform::setupShaders () {
+  // Compile vertex shader
+  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
+  if (vertexShader == 0) {
+    handleError ("Failed to compile vertex shader");
+    return;
+  }
+
+  // Compile fragment shader
+  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
+  if (fragmentShader == 0) {
+    handleError ("Failed to compile fragment shader");
+    glDeleteShader (vertexShader);
+    return;
+  }
+
+  // Create shader program
+  shaderProgram_ = glCreateProgram ();
+  glAttachShader (shaderProgram_, vertexShader);
+  glAttachShader (shaderProgram_, fragmentShader);
+  glLinkProgram (shaderProgram_);
+
+  // Check for linking errors
+  GLint success;
+  glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
+  if (!success) {
+    handleError ("Failed to link shader program");
+    glDeleteShader (vertexShader);
+    glDeleteShader (fragmentShader);
+    return;
+  }
+
+  // Clean up shaders after linking
+  glDeleteShader (vertexShader);
+  glDeleteShader (fragmentShader);
+
+  // Setup VAO, VBO, EBO here if needed
+}
+
 GLuint DesktopPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
   GLuint shader = glCreateShader (shaderType);
   if (shader == 0) {
@@ -155,45 +194,6 @@ void DesktopPlatform::renderBackground (float deltaTime) {
   if (depthTestEnabled) {
     glEnable (GL_DEPTH_TEST);
   }
-}
-
-void DesktopPlatform::setupShaders () {
-  // Compile vertex shader
-  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
-  if (vertexShader == 0) {
-    handleError ("Failed to compile vertex shader");
-    return;
-  }
-
-  // Compile fragment shader
-  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
-  if (fragmentShader == 0) {
-    handleError ("Failed to compile fragment shader");
-    glDeleteShader (vertexShader);
-    return;
-  }
-
-  // Create shader program
-  shaderProgram_ = glCreateProgram ();
-  glAttachShader (shaderProgram_, vertexShader);
-  glAttachShader (shaderProgram_, fragmentShader);
-  glLinkProgram (shaderProgram_);
-
-  // Check for linking errors
-  GLint success;
-  glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
-  if (!success) {
-    handleError ("Failed to link shader program");
-    glDeleteShader (vertexShader);
-    glDeleteShader (fragmentShader);
-    return;
-  }
-
-  // Clean up shaders after linking
-  glDeleteShader (vertexShader);
-  glDeleteShader (fragmentShader);
-
-  // Setup VAO, VBO, EBO here if needed
 }
 
 void DesktopPlatform::initializeImGui () {
