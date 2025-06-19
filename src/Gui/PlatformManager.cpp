@@ -1,5 +1,6 @@
 #include "PlatformManager.hpp"
 #include "DesktopPlatform.hpp"
+#include "GuiStrings.hpp"
 
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
