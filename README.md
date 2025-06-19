@@ -11,11 +11,12 @@ Refactoring is in progress.
 
 TODO
 
-- UI scaller, UI positioner, FPS overlay
+- improve UI positioner, improve FPS overlay
+- add independent window with language flags to global translations
+- add independent window with `+` `-` buttons for scale UI + add and improve original UI Scaller
+- implement emscripten compatibility
 - ~~input handler to self class due responsibility~~
 - ~~storing and loading UI strings from external json file `customstrings.json`~~
-- add window with language flags to global translations
-- implement emscripten part
 
 
 ## License
