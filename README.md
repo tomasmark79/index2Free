@@ -9,6 +9,14 @@ Refactored public release of website [digitalspace.name](https://digitalspace.na
 Refactoring is in progress.  
 > 20% done.  
 
+TODO
+
+- 
+- storing and loading UI strings from external json file `customstrings.json`
+- add window with language flags to global translations
+- implement emscripten part
+
+
 ## License
 
 MIT License  
