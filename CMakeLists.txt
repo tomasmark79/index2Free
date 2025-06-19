@@ -69,6 +69,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${LIBRARY_NAME}/
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 find_package(fmt REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
 # find_package(glew REQUIRED)
@@ -187,6 +188,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 target_link_libraries(
     ${LIBRARY_NAME}
     PUBLIC fmt::fmt
+    PUBLIC nlohmann_json::nlohmann_json
     PUBLIC glm::glm
     PRIVATE imgui::imgui)
 
