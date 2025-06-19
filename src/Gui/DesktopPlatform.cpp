@@ -16,6 +16,7 @@ void DesktopPlatform::initialize () {
   setupImGuiStyle (style);
   scaleImGui ();
   updateWindowSize ();
+  initInputHandlerCallbacks ();
   mainLoop ();
 }
 

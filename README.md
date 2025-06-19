@@ -12,7 +12,7 @@ Refactoring is in progress.
 TODO
 
 - UI scaller, UI positioner, FPS overlay
-- input handler to self class due responsibility
+- ~~input handler to self class due responsibility~~
 - ~~storing and loading UI strings from external json file `customstrings.json`~~
 - add window with language flags to global translations
 - implement emscripten part
