@@ -1,6 +1,57 @@
 {
     "strings": [
         {
+            "id": "Author",
+            "data": {
+                "en": "Tomas Mark",
+                "cs": "Tomáš Mark"
+            }
+        },
+        {
+            "id": "Email",
+            "data": {
+                "en": "Email",
+                "url": "mailto:tomas@digitalspace.name"
+            }
+        },
+        {
+            "id": "Phone",
+            "data": {
+                "en": "Phone",
+                "cs": "Telefon",
+                "tel": "+420731-122-800"
+            }
+        },
+        {
+            "id": "GitHub",
+            "data": {
+                "en": "GitHub",
+                "url": "https://github.com/tomasmark79"
+            }
+        },
+        {
+            "id": "LinkedIn",
+            "data": {
+                "en": "LinkedIn",
+                "url": "https://www.linkedin.com/in/tomas79/"
+            }
+        },
+        {
+            "id": "Discord",
+            "data": {
+                "en": "Discord",
+                "url": "https://discord.com/invite/QeQ9YqnxFn"
+            }
+        },
+        {
+            "id": "Website",
+            "data": {
+                "en": "Website",
+                "cs": "Web",
+                "url": "https://digitalspace.name"
+            }
+        },
+        {
             "id": "btnMe",
             "data": {
                 "en": "Me",
@@ -19,42 +70,6 @@
             "data": {
                 "en": "Creative person with a passion for technology and design.",
                 "cs": "Tvořivá osoba s vášní pro technologie a design."
-            }
-        },
-        {
-            "id": "WindowMeEmail",
-            "data": {
-                "en": "Email",
-                "url": "mailto:tomas@digitalspace.name"
-            }
-        },
-        {
-            "id": "WindowMePhone",
-            "data": {
-                "en": "Phone",
-                "cs": "Telefon",
-                "tel": "+420731-122-800"
-            }
-        },
-        {
-            "id": "WindowMeGitHub",
-            "data": {
-                "en": "GitHub",
-                "url": "https://github.com/tomasmark79"
-            }
-        },
-        {
-            "id": "WindowMeLinkedIn",
-            "data": {
-                "en": "LinkedIn",
-                "url": "https://www.linkedin.com/in/tomas79/"
-            }
-        },
-        {
-            "id": "WindowMeDiscord",
-            "data": {
-                "en": "Discord",
-                "url": "https://discord.com/invite/QeQ9YqnxFn"
             }
         },
         {
