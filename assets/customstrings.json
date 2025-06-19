@@ -1,0 +1,165 @@
+{
+    "strings": [
+        {
+            "id": "btnMe",
+            "data": {
+                "en": "Me",
+                "cs": "Já"
+            }
+        },
+        {
+            "id": "WindowMe",
+            "data": {
+                "en": "That's Me",
+                "cs": "To jsem Já"
+            }
+        },
+        {
+            "id": "WindowMeCreativePerson",
+            "data": {
+                "en": "Creative person with a passion for technology and design.",
+                "cs": "Tvořivá osoba s vášní pro technologie a design."
+            }
+        },
+        {
+            "id": "WindowMeEmail",
+            "data": {
+                "en": "Email",
+                "url": "mailto:tomas@digitalspace.name"
+            }
+        },
+        {
+            "id": "WindowMePhone",
+            "data": {
+                "en": "Phone",
+                "cs": "Telefon",
+                "tel": "+420731-122-800"
+            }
+        },
+        {
+            "id": "WindowMeGitHub",
+            "data": {
+                "en": "GitHub",
+                "url": "https://github.com/tomasmark79"
+            }
+        },
+        {
+            "id": "WindowMeLinkedIn",
+            "data": {
+                "en": "LinkedIn",
+                "url": "https://www.linkedin.com/in/tomas79/"
+            }
+        },
+        {
+            "id": "WindowMeDiscord",
+            "data": {
+                "en": "Discord",
+                "url": "https://discord.com/invite/QeQ9YqnxFn"
+            }
+        },
+        {
+            "id": "btnWebsite",
+            "data": {
+                "en": "Website",
+                "cs": "Web"
+            }
+        },
+        {
+            "id": "WindowWebsite",
+            "data": {
+                "en": "That's My Website",
+                "cs": "To je můj web"
+            }
+        },
+        {
+            "id": "WindowWebsiteContent",
+            "data": {
+                "en": "Digitalspace.name - is a personal website implemented as a single application written in C++. Using a specialized compiler, the project has been transformed into a format that runs directly in a standard web browser. Instead of traditional web technologies like HTML and JavaScript, it uses WebGL and WebAssembly to deliver a native-like application experience in the browser. The goal is to demonstrate an alternative approach to building interactive web content. The source code is currently not publicly available.\n\nCredits:\n- coffee maker\n- c++ programming language\n- conan, cmake, cpm, make, ninja building tools\n- sdl2, fmt, glm, glew, imgui frameworks\n- webassembly, emscripten\n- opengl/webgl\n- shaders by Twitter:@The_ArtOfCode\n- llm's claude & chatgpt for lot of help",
+                "cs": "Digitalspace.name - je osobní webová stránka implementovaná jako jedna aplikace napsaná v C++. Pomocí specializovaného kompilátoru byl projekt převeden do formátu, který běží přímo ve standardním webovém prohlížeči. Místo tradičních webových technologií jako HTML a JavaScript používá WebGL a WebAssembly k poskytování zážitku z nativní aplikace v prohlížeči. Cílem je demonstrovat alternativní přístup k vytváření interaktivního webového obsahu. Zdrojový kód není v současné době veřejně dostupný.\n\nZásluhy:\n- kávovar\n- programovací jazyk c++\n- nástroje pro sestavování conan, cmake, cpm, make, ninja\n- frameworky sdl2, fmt, glm, glew, imgui\n- webassembly, emscripten\n- opengl/webgl\n- shadery od Twitter:@The_ArtOfCode\n- llm's claude & chatgpt pro spoustu pomoci"
+            }
+        },
+        {
+            "id": "btnProjects",
+            "data": {
+                "en": "Projects",
+                "cs": "Projekty"
+            }
+        },
+        {
+            "id": "WindowProjects",
+            "data": {
+                "en": "My Projects",
+                "cs": "Moje projekty"
+            }
+        },
+        {
+            "id": "WindowProjectsContent",
+            "data": {
+                "en": "Here you can find a selection of my projects, showcasing my skills and interests in various areas of software development. Each project is a testament to my dedication to creating high-quality, innovative solutions.",
+                "cs": "Zde najdete výběr mých projektů, které ukazují mé dovednosti a zájmy v různých oblastech vývoje softwaru. Každý projekt je důkazem mého odhodlání vytvářet vysoce kvalitní, inovativní řešení."
+            }
+        },
+        {
+            "id": "dotnamecpp_link",
+            "data": {
+                "en": "DotNameCpp",
+                "cs": "DotNameCpp"
+            }
+        },
+        {
+            "id": "dotnamecpp_description",
+            "data": {
+                "en": "The DotName C++ Template is a modern and versatile foundation for cross-platform development. It provides a robust starting point for C++ developers who need to quickly build reliable applications.",
+                "cs": "Šablona DotName C++ je moderní a všestranný základ pro multiplatformní vývoj. Poskytuje robustní výchozí bod pro C++ vývojáře, kteří potřebují rychle vytvářet spolehlivé aplikace."
+            }
+        },
+        {
+            "id": "followsun_link",
+            "data": {
+                "en": "FollowSun",
+                "cs": "FollowSun"
+            }
+        },
+        {
+            "id": "followsun_description",
+            "data": {
+                "en": "is a lightweight cross-platform C++ application that switches your desktop theme between light and dark modes based on your geographical location and the local solar position (sunrise/sunset times).",
+                "cs": "je lehká multiplatformní C++ aplikace, která přepíná téma vaší plochy mezi světlým a tmavým režimem na základě vaší geografické polohy a místní polohy slunce (časy východu/západu slunce)."
+            }
+        },
+        {
+            "id": "btnAudio",
+            "data": {
+                "en": "Audio",
+                "cs": "Zvuk"
+            }
+        },
+        {
+            "id": "btnPlay",
+            "data": {
+                "en": "Play",
+                "cs": "Hrát"
+            }
+        },
+        {
+            "id": "btnPause",
+            "data": {
+                "en": "Pause",
+                "cs": "Pauza"
+            }
+        },
+        {
+            "id": "btnStop",
+            "data": {
+                "en": "Stop"
+            }
+        },
+        {
+            "id": "lblVolumeShort",
+            "data": {
+                "en": "Vol",
+                "cs": "Hlas"
+            }
+        }
+    ]
+}
