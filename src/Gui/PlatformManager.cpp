@@ -200,15 +200,45 @@ void PlatformManager::setupImGuiStyle (ImGuiStyle& style) {
   style_ = &style;
 }
 
+void PlatformManager::initInputHandlerCallbacks () {
+  inputHandler.setScaleCallback ([this] (float delta) {
+    // userConfigurableScale_ += delta;
+    // userConfigurableScale_ = std::max (0.1f, userConfigurableScale_);
+    // requiredScaleChange_ = true;
+  });
+  inputHandler.setActionCallback (InputAction::ToggleFullscreen,
+                                  [this] () { /*toggleFullscreen ()*/; });
+
+  inputHandler.setActionCallback (InputAction::VolumeUp, [&/*audio*/] () mutable {
+    // currVol = std::min (100, currVol + 5);
+    // audio.setVolume (currVol);
+    // LOG_I_STREAM << "Volume increased to: " << currVol << std::endl;
+  });
+  inputHandler.setActionCallback (InputAction::VolumeDown, [&/*audio*/] () mutable {
+    // currVol = std::max (0, currVol - 5);
+    // audio.setVolume (currVol);
+    // LOG_D_STREAM << "Volume decreased to: " << currVol << std::endl;
+  });
+  inputHandler.setActionCallback (InputAction::Mute, [&/*audio*/] () {
+    // if (audio.isPlaying ()) {
+    //   audio.pauseMusic ();
+    //   LOG_D_STREAM << "Music paused" << std::endl;
+    // } else {
+    //   audio.resumeMusic ();
+    //   LOG_D_STREAM << "Music resumed" << std::endl;
+    // }
+  });
+}
+
 void PlatformManager::mainLoop () {
   bool done = false;
+
   SDL_Event event;
   while (!done) {
+
     while (SDL_PollEvent (&event)) {
       ImGui_ImplSDL2_ProcessEvent (&event);
-      if (event.type == SDL_QUIT) {
-        done = true;
-      }
+      done = inputHandler.processEvent (event); // own event processing
     }
 
     ImGui_ImplOpenGL3_NewFrame ();

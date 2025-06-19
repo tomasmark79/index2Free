@@ -4,7 +4,8 @@
 #include <Assets/AssetContext.hpp>
 #include <Logger/Logger.hpp>
 #include <Utils/Utils.hpp>
-#include <Gui/TextureTools.hpp>
+#include "TextureTools.hpp"
+#include "InputHandler.hpp"
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -35,6 +36,7 @@ protected:
   int windowWidth_ = 1920;
   int windowHeight_ = 1080;
   const float BASE_FONT_SIZE = 16.0f;
+  InputHandler inputHandler;
   SDL_GLContext glContext_ = nullptr;
   SDL_Window* window_ = nullptr;
   GLuint vao_, vbo_, ebo_, shaderProgram_;
@@ -64,6 +66,9 @@ protected:
   void setupImGuiStyle (ImGuiStyle& style);
   virtual void initializeImGui () = 0;
   virtual void scaleImGui () = 0;
+
+  protected:
+  void initInputHandlerCallbacks ();
 
 protected:
   void mainLoop ();
