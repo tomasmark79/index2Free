@@ -16,7 +16,7 @@ from conan.tools.files import copy
 # ------------------------------------------------- --
 
 class DotNameCppRecipe(ConanFile):
-    name = "libcore"
+    name = "corelib"
     version = "1.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"

@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2024-2025 Tomáš Mark
 
-#include "LibCore/LibCore.hpp"
+#include "CoreLib/CoreLib.hpp"
 #include "Logger/Logger.hpp"
 #include "Utils/Utils.hpp"
 
@@ -19,8 +19,8 @@
 
 using namespace DotNameUtils;
 
-namespace indexContext {
-  constexpr char standaloneName[] = "index";
+namespace AppContext {
+  constexpr char standaloneName[] = "index2";
   const std::filesystem::path standalonePath
       = PathUtils::getParentPath (PathUtils::getStandalonePath ());
   constexpr std::string_view utilsAssetPath = UTILS_ASSET_PATH;
@@ -29,11 +29,11 @@ namespace indexContext {
   const std::filesystem::path assetsPathFirstFile = assetsPath / utilsFirstAssetFile;
 }
 
-std::unique_ptr<dotname::LibCore> uniqueLib;
+std::unique_ptr<dotname::CoreLib> uniqueLib;
 
 int handlesArguments (int argc, const char* argv[]) {
   try {
-    auto options = std::make_unique<cxxopts::Options> (argv[0], indexContext::standaloneName);
+    auto options = std::make_unique<cxxopts::Options> (argv[0], AppContext::standaloneName);
     options->positional_help ("[optional args]").show_positional_help ();
     options->set_width (80);
     options->set_tab_expansion ();
@@ -50,13 +50,13 @@ int handlesArguments (int argc, const char* argv[]) {
     }
 
     if (result["log2file"].as<bool> ()) {
-      LOG.enableFileLogging (std::string (indexContext::standaloneName) + ".log");
+      LOG.enableFileLogging (std::string (AppContext::standaloneName) + ".log");
       LOG_D_STREAM << "Logging to file enabled [-2]" << std::endl;
     }
 
     if (!result.count ("omit")) {
-      // uniqueLib = std::make_unique<dotname::LibCore> ();
-      uniqueLib = std::make_unique<dotname::LibCore> (indexContext::assetsPath);
+      // uniqueLib = std::make_unique<dotname::DotNameLib> ();
+      uniqueLib = std::make_unique<dotname::CoreLib> (AppContext::assetsPath);
     } else {
       LOG_D_STREAM << "Loading library omitted [-1]" << std::endl;
     }
@@ -86,7 +86,7 @@ int printAssets (const std::filesystem::path& assetsPath) {
     }
 
     for (const auto& file : files) {
-      LOG_D_STREAM << "╰➤ " << file << std::endl;
+      LOG_D_STREAM << file << std::endl;
     }
   } catch (const std::exception& e) {
     std::cerr << "Error: " << e.what () << std::endl;
@@ -95,17 +95,17 @@ int printAssets (const std::filesystem::path& assetsPath) {
   return 0;
 }
 
-int runindex (int argc, const char* argv[]) {
+int runApp (int argc, const char* argv[]) {
 
   LOG.noHeader (true);
   LOG.setSkipLine (false);
-  LOG_I_STREAM << "Starting " << indexContext::standaloneName << " ..." << std::endl;
+  LOG_I_STREAM << "Starting " << AppContext::standaloneName << " ..." << std::endl;
 
 #ifdef EMSCRIPTEN
-  LOG_I_STREAM << "╰➤ C++ Running in Emscripten environment" << std::endl;
+  LOG_I_STREAM << "C++ Running in Emscripten environment" << std::endl;
 #endif
 #ifdef __EMSCRIPTEN_PTHREADS__
-  LOG_I_STREAM << " ⤷ Emscripten C++ with pthreads support" << std::endl;
+  LOG_I_STREAM << "Emscripten C++ with pthreads support" << std::endl;
 #endif
 
   if (handlesArguments (argc, argv) != 0) {
@@ -118,6 +118,6 @@ int runindex (int argc, const char* argv[]) {
   uniqueLib = nullptr;
 
   // bye
-  LOG_I_STREAM << "Sucessfully exited " << indexContext::standaloneName << std::endl;
+  LOG_I_STREAM << "Sucessfully exited " << AppContext::standaloneName << std::endl;
   return 0;
 }

@@ -4,8 +4,11 @@
 // MIT License
 // Copyright (c) 2024-2025 Tomáš Mark
 
+#define CUSTOM_STRINGS_FILE "customstrings.json"
+
 #include "Logger/Logger.hpp"
 #include <nlohmann/json.hpp>
+#include <Assets/AssetContext.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -266,6 +269,25 @@ namespace DotNameUtils {
       return std::nullopt;
     }
 
+    // Get EMAIL from your custom format
+    inline std::optional<std::string> getEmail (const nlohmann::json& stringsJson,
+                                                const std::string& id) {
+      try {
+        if (stringsJson.contains ("strings") && stringsJson["strings"].is_array ()) {
+          auto item = findById (stringsJson["strings"], id);
+          if (item && item->contains ("data")) {
+            const auto& data = (*item)["data"];
+            if (data.contains ("email")) {
+              return data["email"].get<std::string> ();
+            }
+          }
+        }
+      } catch (const std::exception&) {
+        // Return nullopt on any error
+      }
+      return std::nullopt;
+    }
+
     // Get URL from your custom format
     inline std::optional<std::string> getUrl (const nlohmann::json& stringsJson,
                                               const std::string& id) {
@@ -331,13 +353,46 @@ namespace DotNameUtils {
       return result;
     }
 
+    // Just for debugging purposes
+    // (Author, Email, Phone, Website)
+    inline std::string getCustomStringSign () {
+      std::string result;
+      try {
+        auto customStrings = loadFromFile (AssetContext::getAssetsPath () / CUSTOM_STRINGS_FILE);
+        auto authorEn = getLocalizedString (customStrings, "Author", "en");
+        auto authorCs = getLocalizedString (customStrings, "Author", "cs");
+        auto email = getEmail (customStrings, "Email");
+        auto phone = getTel (customStrings, "Phone");
+        auto website = getUrl (customStrings, "Website");
+
+        if (email)
+          result += "Email: " + *email + "\n";
+        else
+          result += "No email provided.\n";
+
+        if (phone)
+          result += "Phone: " + *phone + "\n";
+        else
+          result += "No phone provided.\n";
+
+        if (website)
+          result += "Website: " + *website;
+        else
+          result += "No website provided.";
+
+      } catch (const std::exception& e) {
+        result = "Error loading custom strings: " + std::string (e.what ());
+      }
+      return result;
+    }
+
   } // namespace JsonUtils
 
   namespace Performance {
     inline void simpleCpuBenchmark (std::chrono::microseconds duration
                                     = std::chrono::microseconds (1000000)) {
-      LOG_I_STREAM << "╰➤ Simple CPU benchmark" << std::endl;
-      LOG_I_STREAM << " ⤷ CPU cores: " << std::thread::hardware_concurrency () << std::endl;
+      LOG_I_STREAM << "Simple CPU benchmark" << std::endl;
+      LOG_I_STREAM << "CPU cores: " << std::thread::hardware_concurrency () << std::endl;
       auto start = std::chrono::high_resolution_clock::now ();
       auto end = start + duration;
       long int iterations = 0;
@@ -356,9 +411,8 @@ namespace DotNameUtils {
       auto actualDuration
           = std::chrono::duration_cast<std::chrono::milliseconds> (actualEnd - start);
       std::string iterationsStr = std::to_string (iterations);
-      LOG_I_STREAM << " ⤷ CPU benchmark duration: " << actualDuration.count () << " ms"
-                   << std::endl;
-      LOG_I_STREAM << " ⤷ Total iterations: " << Dots::addDots (iterationsStr) << std::endl;
+      LOG_I_STREAM << "CPU benchmark duration: " << actualDuration.count () << " ms" << std::endl;
+      LOG_I_STREAM << "Total iterations: " << Dots::addDots (iterationsStr) << std::endl;
     }
   } // namespace Performance
 

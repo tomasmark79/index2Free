@@ -11,7 +11,7 @@
             "id": "Email",
             "data": {
                 "en": "Email",
-                "url": "mailto:tomas@digitalspace.name"
+                "email": "tomas@digitalspace.name"
             }
         },
         {
