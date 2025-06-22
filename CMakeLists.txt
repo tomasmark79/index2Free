@@ -40,7 +40,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ==============================================================================
 # Library attributes - case size will reflect resource files case size
 # ==============================================================================
-set(LIBRARY_NAME LibCore)
+set(LIBRARY_NAME CoreLib)
 set(LIBRARY_NAMESPACE dotname)
 project(
     ${LIBRARY_NAME}

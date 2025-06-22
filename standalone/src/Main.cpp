@@ -4,5 +4,5 @@
 #include "AppCore.hpp"
 
 int main (int argc, const char* argv[]) {
-  return runindex (argc, argv);
+  return runApp (argc, argv);
 }
