@@ -2,7 +2,7 @@
 #define __FRAGMENT_DEF_H__
 
 // WebGL1 shaders (OpenGL ES 2.0)
-const char* fragmentShader = R"(
+const char* fragmentShader200 = R"(
 precision highp float;
 
 uniform vec2 iResolution;

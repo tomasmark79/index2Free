@@ -2,7 +2,6 @@
 
 #include <Shaders/dyinguniverse/vertex_def.hpp>
 #include <Shaders/dyinguniverse/fragment_def.hpp>
-#include <vector>
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -11,7 +10,7 @@ void EmscriptenPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", 1920, 1080);
   createOpenGLContext ();
   // setSwapInterval (1); // Enable vsync // not available in Emscripten
-  initializeGLEW ();
+  initializeGLEW (); // // GLEW is not needed in Emscripten
   setupQuad ();
   setupShaders ();
   initializeImGui ();
@@ -108,8 +107,8 @@ void EmscriptenPlatform::setupShaders () {
     GLuint fragmentShader = compileShader (fragmentShader300, GL_FRAGMENT_SHADER);
   #else
     // WebGL 1.0 / OpenGL ES 2.0
-    GLuint vertexShader = compileShader (vertexShader, GL_VERTEX_SHADER);
-    GLuint fragmentShader = compileShader (fragmentShader, GL_FRAGMENT_SHADER);
+    GLuint vertexShader = compileShader (vertexShader200, GL_VERTEX_SHADER);
+    GLuint fragmentShader = compileShader (fragmentShader200, GL_FRAGMENT_SHADER);
   #endif
 
   if (vertexShader == 0) {
@@ -181,7 +180,17 @@ void EmscriptenPlatform::renderBackground (float deltaTime) {
   glDisable (GL_DEPTH_TEST);
 
   glUseProgram (shaderProgram_);
+  
+#if defined(IMGUI_IMPL_OPENGL_ES3) || (!defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3))
+  // OpenGL ES 3.0+ or desktop OpenGL - VAO is available
   glBindVertexArray (vao_);
+#else
+  // OpenGL ES 2.0 - VAO not available, bind buffers manually
+  glBindBuffer (GL_ARRAY_BUFFER, vbo_);
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_);
+  glEnableVertexAttribArray (0);
+  glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof (float), (void*)0);
+#endif
 
   GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
   GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
@@ -201,6 +210,11 @@ void EmscriptenPlatform::renderBackground (float deltaTime) {
     glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
 
   glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+  // OpenGL ES 2.0 - cleanup manually bound attributes
+  glDisableVertexAttribArray (0);
+#endif
 
   if (depthTestEnabled) {
     glEnable (GL_DEPTH_TEST);

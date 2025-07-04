@@ -2,7 +2,7 @@
 #define __VERTEX_DEF_H__
 
 // WebGL1 shaders (OpenGL ES 2.0)
-const char* vertexShader = R"(
+const char* vertexShader200 = R"(
 precision highp float;
 attribute vec2 pos;
 void main() {
