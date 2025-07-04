@@ -3,6 +3,11 @@
 
 #include "PlatformManager.hpp"
 
+#ifdef __EMSCRIPTEN__
+  #include <emscripten.h>
+  #include <emscripten/html5.h>
+#endif
+
 class EmscriptenPlatform : public PlatformManager {
 
   float userConfigurableScale_ = 2.0f;
@@ -23,7 +28,10 @@ public:
   void renderBackground (float deltaTime) override;
   void initializeImGui () override;
   void scaleImGui () override;
-};
 
+#ifdef __EMSCRIPTEN__
+  void frameStep (); // Single frame step for Emscripten main loop
+#endif
+};
 
 #endif // __EMSCRIPTENPLATFORM_H__

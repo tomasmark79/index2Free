@@ -110,9 +110,11 @@ file(
 # ==============================================================================
 # source files and `internal` header files that are not intended for public use
 # ==============================================================================
+
+# Common source files (excluding platform-specific GUI files)
 file(
     GLOB_RECURSE
-    sources
+    common_sources
     CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
@@ -122,6 +124,23 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+
+# Remove platform-specific files from common sources
+list(REMOVE_ITEM common_sources
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/EmscriptenPlatform.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/DesktopPlatform.cpp)
+
+# Platform-specific source files
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    set(platform_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/EmscriptenPlatform.cpp)
+    message(STATUS "Using Emscripten platform sources")
+else()
+    set(platform_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/DesktopPlatform.cpp)
+    message(STATUS "Using Desktop platform sources")
+endif()
+
+# Combine all sources
+set(sources ${common_sources} ${platform_sources})
 
 # ==============================================================================
 # Create target
