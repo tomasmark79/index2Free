@@ -6,7 +6,7 @@
 void EmscriptenPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", 1920, 1080);
   createOpenGLContext ();
-  setSwapInterval (1); // Enable vsync
+  // setSwapInterval (1); // Enable vsync // not in Emscripten
   initializeGLEW ();
   setupQuad ();
   setupShaders ();
