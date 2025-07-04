@@ -1,15 +1,15 @@
-#ifndef WEBPLATFORM_HPP
-#define WEBPLATFORM_HPP
+#ifndef __EMSCRIPTENPLATFORM_H__
+#define __EMSCRIPTENPLATFORM_H__
 
 #include "PlatformManager.hpp"
 
-class WebPlatform : public PlatformManager {
+class EmscriptenPlatform : public PlatformManager {
 
   float userConfigurableScale_ = 2.0f;
 
 public:
-  WebPlatform () = default;
-  ~WebPlatform () override = default;
+  EmscriptenPlatform () = default;
+  ~EmscriptenPlatform () override = default;
 
   void initialize () override;
   void shutdown () override;
@@ -25,4 +25,5 @@ public:
   void scaleImGui () override;
 };
 
-#endif
+
+#endif // __EMSCRIPTENPLATFORM_H__

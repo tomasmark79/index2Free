@@ -1,5 +1,8 @@
 #include "PlatformManager.hpp"
+
 #include "DesktopPlatform.hpp"
+#include "EmscriptenPlatform.hpp"
+
 #include "GuiStrings.hpp"
 
 void initializePlatform () {

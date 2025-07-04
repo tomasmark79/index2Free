@@ -3,7 +3,6 @@
 #include <Shaders/dyinguniverse/vertex_def.hpp>
 #include <Shaders/dyinguniverse/fragment_def.hpp>
 
-
 void DesktopPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", 1920, 1080);
   createOpenGLContext ();
@@ -62,8 +61,7 @@ void DesktopPlatform::createSDL2Window (const char* title, int width, int height
   windowHeight_ = height;
 }
 
-void DesktopPlatform::updateWindowSize ()
-{
+void DesktopPlatform::updateWindowSize () {
   int width, height;
   SDL_GetWindowSize (window_, &width, &height);
   if (width != windowWidth_ || height != windowHeight_) {

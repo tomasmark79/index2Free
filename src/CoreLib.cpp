@@ -29,7 +29,7 @@ namespace dotname {
       auto logo = std::ifstream (AssetContext::getAssetsPath () / "logo.png");
 
 #if defined(__EMSCRIPTEN__)
-      static EmscriptenPlatform pltf;
+      static WebPlatformPlatform pltf;
       pltf.initialize ();
 #else
       static DesktopPlatform pltf;

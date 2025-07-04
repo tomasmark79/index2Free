@@ -1,10 +1,9 @@
-#include "WebPlatform.hpp"
+#include "EmscriptenPlatform.hpp"
 
 #include <Shaders/dyinguniverse/vertex_def.hpp>
 #include <Shaders/dyinguniverse/fragment_def.hpp>
 
-
-void WebPlatform::initialize () {
+void EmscriptenPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", 1920, 1080);
   createOpenGLContext ();
   setSwapInterval (1); // Enable vsync
@@ -16,10 +15,11 @@ void WebPlatform::initialize () {
   setupImGuiStyle (style);
   scaleImGui ();
   updateWindowSize ();
+  initInputHandlerCallbacks ();
   mainLoop ();
 }
 
-void WebPlatform::shutdown () {
+void EmscriptenPlatform::shutdown () {
   if (window_) {
     SDL_DestroyWindow (window_);
     window_ = nullptr;
@@ -34,7 +34,7 @@ void WebPlatform::shutdown () {
   }
 }
 
-void WebPlatform::createSDL2Window (const char* title, int width, int height) {
+void EmscriptenPlatform::createSDL2Window (const char* title, int width, int height) {
 
 #ifdef SDL_HINT_IME_SHOW_UI
   SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1"); // Enable IME UI on desktop platforms
@@ -61,8 +61,7 @@ void WebPlatform::createSDL2Window (const char* title, int width, int height) {
   windowHeight_ = height;
 }
 
-void WebPlatform::updateWindowSize ()
-{
+void EmscriptenPlatform::updateWindowSize () {
   int width, height;
   SDL_GetWindowSize (window_, &width, &height);
   if (width != windowWidth_ || height != windowHeight_) {
@@ -73,7 +72,7 @@ void WebPlatform::updateWindowSize ()
   }
 }
 
-void WebPlatform::createOpenGLContext () {
+void EmscriptenPlatform::createOpenGLContext () {
   decideOpenGLVersion ();
   glContext_ = SDL_GL_CreateContext (window_);
   if (!glContext_) {
@@ -82,11 +81,11 @@ void WebPlatform::createOpenGLContext () {
   SDL_GL_MakeCurrent (window_, glContext_);
 }
 
-void WebPlatform::setSwapInterval (int interval) {
+void EmscriptenPlatform::setSwapInterval (int interval) {
   SDL_GL_SetSwapInterval (interval); // vsync only on desktop
 }
 
-void WebPlatform::initializeGLEW () {
+void EmscriptenPlatform::initializeGLEW () {
 
 #ifndef IMGUI_IMPL_OPENGL_ES2
   if (glewInit () != GLEW_OK) {
@@ -96,7 +95,7 @@ void WebPlatform::initializeGLEW () {
 #endif
 }
 
-void WebPlatform::setupShaders () {
+void EmscriptenPlatform::setupShaders () {
   // Compile vertex shader
   GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
   if (vertexShader == 0) {
@@ -135,7 +134,7 @@ void WebPlatform::setupShaders () {
   // Setup VAO, VBO, EBO here if needed
 }
 
-GLuint WebPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
+GLuint EmscriptenPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
   GLuint shader = glCreateShader (shaderType);
   if (shader == 0) {
     handleGLError ("Failed to create shader");
@@ -161,7 +160,7 @@ GLuint WebPlatform::compileShader (const char* shaderSource, GLenum shaderType) 
   return shader;
 }
 
-void WebPlatform::renderBackground (float deltaTime) {
+void EmscriptenPlatform::renderBackground (float deltaTime) {
   // float width = (float)windowWidth_;
   // float height = (float)windowHeight_;
   // glViewport (0, 0, width, height);
@@ -196,7 +195,7 @@ void WebPlatform::renderBackground (float deltaTime) {
   }
 }
 
-void WebPlatform::initializeImGui () {
+void EmscriptenPlatform::initializeImGui () {
   IMGUI_CHECKVERSION ();
   ImGui::CreateContext ();
   io_ = &ImGui::GetIO ();
@@ -207,7 +206,7 @@ void WebPlatform::initializeImGui () {
   ImGui_ImplOpenGL3_Init (glsl_version_);
 }
 
-void WebPlatform::scaleImGui () {
+void EmscriptenPlatform::scaleImGui () {
   ImGuiStyle defaultStyle_;
   io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
   io_->DisplayFramebufferScale = ImVec2 (1.0f, 1.0f);
