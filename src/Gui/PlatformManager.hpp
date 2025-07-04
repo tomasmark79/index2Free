@@ -1,5 +1,5 @@
-#ifndef PLATFORMMANAGER_HPP
-#define PLATFORMMANAGER_HPP
+#ifndef __PLATFORMMANAGER_H__
+#define __PLATFORMMANAGER_H__
 
 #include <Assets/AssetContext.hpp>
 #include <Logger/Logger.hpp>
@@ -82,4 +82,5 @@ protected:
   void handleError (const char* message, int errorCode) const;
 };
 
-#endif
+
+#endif // __PLATFORMMANAGER_H__

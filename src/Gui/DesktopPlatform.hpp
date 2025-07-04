@@ -1,5 +1,5 @@
-#ifndef DESKTOPPLATFORM_HPP
-#define DESKTOPPLATFORM_HPP
+#ifndef __DESKTOPPLATFORM_H__
+#define __DESKTOPPLATFORM_H__
 
 #include "PlatformManager.hpp"
 
@@ -25,4 +25,4 @@ public:
   void scaleImGui () override;
 };
 
-#endif
+#endif // __DESKTOPPLATFORM_H__
