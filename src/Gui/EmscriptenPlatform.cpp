@@ -2,11 +2,15 @@
 
 #include <Shaders/dyinguniverse/vertex_def.hpp>
 #include <Shaders/dyinguniverse/fragment_def.hpp>
+#include <vector>
+
+#include <emscripten.h>
+#include <emscripten/html5.h>
 
 void EmscriptenPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", 1920, 1080);
   createOpenGLContext ();
-  // setSwapInterval (1); // Enable vsync // not in Emscripten
+  // setSwapInterval (1); // Enable vsync // not available in Emscripten
   initializeGLEW ();
   setupQuad ();
   setupShaders ();
@@ -16,7 +20,12 @@ void EmscriptenPlatform::initialize () {
   scaleImGui ();
   updateWindowSize ();
   initInputHandlerCallbacks ();
-  mainLoop ();
+  
+  // In Emscripten, we need to set up the main loop differently
+  emscripten_set_main_loop_arg([](void* userData) {
+    EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*>(userData);
+    platform->frameStep();
+  }, this, 0, 1);
 }
 
 void EmscriptenPlatform::shutdown () {
@@ -36,9 +45,7 @@ void EmscriptenPlatform::shutdown () {
 
 void EmscriptenPlatform::createSDL2Window (const char* title, int width, int height) {
 
-#ifdef SDL_HINT_IME_SHOW_UI
-  SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1"); // Enable IME UI on desktop platforms
-#endif
+  // IME hint not typically needed in web browsers
 
   if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
     handleSDLError ("Failed to initialize SDL");
@@ -50,8 +57,9 @@ void EmscriptenPlatform::createSDL2Window (const char* title, int width, int hei
   SDL_GL_SetAttribute (SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
 
-  SDL_WindowFlags windowFlags
-      = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+  // For Emscripten, we don't need HIGHDPI flag as it's handled differently
+  SDL_WindowFlags windowFlags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
   window_ = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
                               height, windowFlags);
   if (!window_) {
@@ -82,29 +90,33 @@ void EmscriptenPlatform::createOpenGLContext () {
 }
 
 void EmscriptenPlatform::setSwapInterval (int interval) {
-  SDL_GL_SetSwapInterval (interval); // vsync only on desktop
+  // SDL_GL_SetSwapInterval may not work as expected in Emscripten/WebGL
+  // Browser controls vsync, but we can still try to set it
+  SDL_GL_SetSwapInterval (interval);
 }
 
 void EmscriptenPlatform::initializeGLEW () {
-
-#ifndef IMGUI_IMPL_OPENGL_ES2
-  if (glewInit () != GLEW_OK) {
-    printf ("Error initializing GLEW\n");
-    return;
-  }
-#endif
+  // GLEW is not needed in Emscripten, OpenGL ES functions are available directly
+  return;
 }
 
 void EmscriptenPlatform::setupShaders () {
-  // Compile vertex shader
-  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
+  // Use OpenGL ES shaders for Emscripten
+  #if defined(IMGUI_IMPL_OPENGL_ES3)
+    // WebGL 2.0 / OpenGL ES 3.0
+    GLuint vertexShader = compileShader (vertexShader300, GL_VERTEX_SHADER);
+    GLuint fragmentShader = compileShader (fragmentShader300, GL_FRAGMENT_SHADER);
+  #else
+    // WebGL 1.0 / OpenGL ES 2.0
+    GLuint vertexShader = compileShader (vertexShader, GL_VERTEX_SHADER);
+    GLuint fragmentShader = compileShader (fragmentShader, GL_FRAGMENT_SHADER);
+  #endif
+
   if (vertexShader == 0) {
     handleError ("Failed to compile vertex shader");
     return;
   }
 
-  // Compile fragment shader
-  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
   if (fragmentShader == 0) {
     handleError ("Failed to compile fragment shader");
     glDeleteShader (vertexShader);
@@ -234,4 +246,43 @@ void EmscriptenPlatform::scaleImGui () {
 
   // and then apply scaling
   ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
+}
+
+void EmscriptenPlatform::frameStep() {
+  SDL_Event event;
+  
+  // Process all pending events
+  while (SDL_PollEvent(&event)) {
+    ImGui_ImplSDL2_ProcessEvent(&event);
+    bool shouldExit = inputHandler.processEvent(event);
+    if (shouldExit) {
+      // In Emscripten, we can't just exit the loop, we need to cancel the main loop
+      emscripten_cancel_main_loop();
+      return;
+    }
+  }
+
+  // Start new ImGui frame
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame();
+  ImGui::NewFrame();
+
+  // Show demo window
+  bool showDemo = true;
+  if (showDemo)
+    ImGui::ShowDemoWindow(&showDemo);
+
+  // Render GUI
+  ImGui::Render();
+  glViewport(0, 0, windowWidth_, windowHeight_);
+  glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // Render background shader
+  float time = SDL_GetTicks() / 1000.0f;
+  renderBackground(time);
+
+  // Render ImGui
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  SDL_GL_SwapWindow(window_);
 }

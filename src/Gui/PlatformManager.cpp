@@ -8,24 +8,29 @@
   #include "DesktopPlatform.hpp"
 #endif
 
-void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
-  static EmscriptenPlatform pltf;
-  pltf.initialize ();
+static EmscriptenPlatform* g_platform = nullptr;
 #else
-  static DesktopPlatform pltf;
-  pltf.initialize ();
+static DesktopPlatform* g_platform = nullptr;
 #endif
+
+void initializePlatform () {
+  if (g_platform == nullptr) {
+#if defined(__EMSCRIPTEN__)
+    g_platform = new EmscriptenPlatform();
+#else
+    g_platform = new DesktopPlatform();
+#endif
+  }
+  g_platform->initialize();
 }
 
 void shutdownPlatform () {
-#if defined(__EMSCRIPTEN__)
-  static EmscriptenPlatform pltf;
-  pltf.shutdown ();
-#else
-  static DesktopPlatform pltf;
-  pltf.shutdown ();
-#endif
+  if (g_platform != nullptr) {
+    g_platform->shutdown();
+    delete g_platform;
+    g_platform = nullptr;
+  }
 }
 
 void PlatformManager::decideOpenGLVersion () {

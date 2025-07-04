@@ -7,11 +7,12 @@
 #include <Utils/Utils.hpp>
 
 #include <Gui/PlatformManager.hpp>
-#include <Gui/DesktopPlatform.hpp>
-// #include <Gui/EmscriptenPlatform.hpp>
 
-#if defined(PLATFORM_WEB)
+#if defined(__EMSCRIPTEN__)
   #include <emscripten/emscripten.h>
+  #include "Gui/EmscriptenPlatform.hpp"
+#else
+  #include "Gui/DesktopPlatform.hpp"
 #endif
 
 namespace dotname {
@@ -29,7 +30,7 @@ namespace dotname {
       auto logo = std::ifstream (AssetContext::getAssetsPath () / "logo.png");
 
 #if defined(__EMSCRIPTEN__)
-      static WebPlatformPlatform pltf;
+      static EmscriptenPlatform pltf;
       pltf.initialize ();
 #else
       static DesktopPlatform pltf;
