@@ -7,14 +7,14 @@
 Refactored public release of website [digitalspace.name](https://digitalspace.name).  
 
 Refactoring is in progress.  
-> 25% done.  
+> 45% done.  
 
 TODO
 
 - improve UI positioner, improve FPS overlay
 - add independent window with language flags to global translations
 - add independent window with `+` `-` buttons for scale UI + add and improve original UI Scaller
-- implement emscripten compatibility
+- implement emscripten compatibility (80% done)
 - ~~input handler to self class due responsibility~~
 - ~~storing and loading UI strings from external json file `customstrings.json`~~
 

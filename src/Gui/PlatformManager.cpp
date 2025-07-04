@@ -17,17 +17,17 @@ static DesktopPlatform* g_platform = nullptr;
 void initializePlatform () {
   if (g_platform == nullptr) {
 #if defined(__EMSCRIPTEN__)
-    g_platform = new EmscriptenPlatform();
+    g_platform = new EmscriptenPlatform ();
 #else
-    g_platform = new DesktopPlatform();
+    g_platform = new DesktopPlatform ();
 #endif
   }
-  g_platform->initialize();
+  g_platform->initialize ();
 }
 
 void shutdownPlatform () {
   if (g_platform != nullptr) {
-    g_platform->shutdown();
+    g_platform->shutdown ();
     delete g_platform;
     g_platform = nullptr;
   }
@@ -81,11 +81,15 @@ void PlatformManager::setupQuad () {
     2, 3, 0  // second triangle
   };
 
+#if defined(IMGUI_IMPL_OPENGL_ES3) \
+    || (!defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3))
+  // OpenGL ES 3.0+ or desktop OpenGL - VAO is available
   glGenVertexArrays (1, &vao_);
+  glBindVertexArray (vao_);
+#endif
+
   glGenBuffers (1, &vbo_);
   glGenBuffers (1, &ebo_);
-
-  glBindVertexArray (vao_);
 
   glBindBuffer (GL_ARRAY_BUFFER, vbo_);
   glBufferData (GL_ARRAY_BUFFER, sizeof (vertices), vertices, GL_STATIC_DRAW);
@@ -97,7 +101,14 @@ void PlatformManager::setupQuad () {
   glEnableVertexAttribArray (0);
   glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof (float), (void*)0);
 
+#if defined(IMGUI_IMPL_OPENGL_ES3) \
+    || (!defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3))
+  // OpenGL ES 3.0+ or desktop OpenGL - unbind VAO
   glBindVertexArray (0);
+#else
+  // OpenGL ES 2.0 - disable vertex attributes for now
+  glDisableVertexAttribArray (0);
+#endif
 }
 
 void PlatformManager::setupImGuiStyle (ImGuiStyle& style) {

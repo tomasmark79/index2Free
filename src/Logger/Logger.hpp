@@ -150,7 +150,7 @@ public:
   template <typename... Args>
   void logFmtMessage (Level level, const std::string& format, const std::string& caller,
                       Args&&... args) {
-    std::string message = fmt::format (format, std::forward<Args> (args)...);
+    std::string message = fmt::vformat (format, fmt::make_format_args(args...));
     log (level, message, caller);
   }
 
