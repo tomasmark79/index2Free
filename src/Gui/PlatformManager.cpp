@@ -1,9 +1,12 @@
 #include "PlatformManager.hpp"
 
-#include "DesktopPlatform.hpp"
-#include "EmscriptenPlatform.hpp"
-
 #include "GuiStrings.hpp"
+
+#if defined(__EMSCRIPTEN__)
+  #include "EmscriptenPlatform.hpp"
+#else
+  #include "DesktopPlatform.hpp"
+#endif
 
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
@@ -209,8 +212,9 @@ void PlatformManager::initInputHandlerCallbacks () {
     // userConfigurableScale_ = std::max (0.1f, userConfigurableScale_);
     // requiredScaleChange_ = true;
   });
-  inputHandler.setActionCallback (InputAction::ToggleFullscreen,
-                                  [this] () { /*toggleFullscreen ()*/; });
+  inputHandler.setActionCallback (InputAction::ToggleFullscreen, [this] () { /*toggleFullscreen ()*/
+                                                                             ;
+  });
 
   inputHandler.setActionCallback (InputAction::VolumeUp, [&/*audio*/] () mutable {
     // currVol = std::min (100, currVol + 5);
