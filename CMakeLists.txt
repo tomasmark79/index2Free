@@ -126,9 +126,8 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
 
 # Remove platform-specific files from common sources
-list(REMOVE_ITEM common_sources
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/EmscriptenPlatform.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/DesktopPlatform.cpp)
+list(REMOVE_ITEM common_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/EmscriptenPlatform.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/Gui/DesktopPlatform.cpp)
 
 # Platform-specific source files
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")

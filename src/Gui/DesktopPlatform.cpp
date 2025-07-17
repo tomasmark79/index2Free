@@ -130,8 +130,6 @@ void DesktopPlatform::setupShaders () {
   // Clean up shaders after linking
   glDeleteShader (vertexShader);
   glDeleteShader (fragmentShader);
-
-  // Setup VAO, VBO, EBO here if needed
 }
 
 GLuint DesktopPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
