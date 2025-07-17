@@ -264,8 +264,10 @@ void EmscriptenPlatform::scaleImGui () {
 }
 
 void EmscriptenPlatform::frameStep () {
-  SDL_Event event;
 
+  updateWindowSize ();
+
+  SDL_Event event;
   // Process all pending events
   while (SDL_PollEvent (&event)) {
     ImGui_ImplSDL2_ProcessEvent (&event);
