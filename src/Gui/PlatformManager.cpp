@@ -1,36 +1,62 @@
 #include "PlatformManager.hpp"
+#include <memory>
 
 #include "GuiStrings.hpp"
 
+// Static platform instance
 #if defined(__EMSCRIPTEN__)
   #include "EmscriptenPlatform.hpp"
+static std::unique_ptr<EmscriptenPlatform> gPlatform = nullptr;
 #else
   #include "DesktopPlatform.hpp"
+static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #endif
 
-#if defined(__EMSCRIPTEN__)
-static EmscriptenPlatform* g_platform = nullptr;
-#else
-static DesktopPlatform* g_platform = nullptr;
-#endif
-
+// Function to initialize the platform
 void initializePlatform () {
-  if (g_platform == nullptr) {
 #if defined(__EMSCRIPTEN__)
-    g_platform = new EmscriptenPlatform ();
+  gPlatform = std::make_unique<EmscriptenPlatform> ();
+  gPlatform->initialize ();
 #else
-    g_platform = new DesktopPlatform ();
+  gPlatform = std::make_unique<DesktopPlatform> ();
+  gPlatform->initialize ();
 #endif
-  }
-  g_platform->initialize ();
 }
 
-void shutdownPlatform () {
-  if (g_platform != nullptr) {
-    g_platform->shutdown ();
-    delete g_platform;
-    g_platform = nullptr;
+void PlatformManager::createOpenGLContext (int swapInterval) {
+  decideOpenGLVersion ();
+  glContext_ = SDL_GL_CreateContext (window_);
+  if (!glContext_) {
+    handleSDLError ("Failed to create OpenGL context");
   }
+  SDL_GL_MakeCurrent (window_, glContext_);
+  SDL_GL_SetSwapInterval (swapInterval); // Set vsync to the specified FPS
+}
+
+GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderType) {
+  GLuint shader = glCreateShader (shaderType);
+  if (shader == 0) {
+    handleGLError ("Failed to create shader");
+    return 0;
+  }
+
+  glShaderSource (shader, 1, &shaderSource, nullptr);
+  glCompileShader (shader);
+
+  // Check for compilation errors
+  GLint success;
+  glGetShaderiv (shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    GLint logLength;
+    glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
+    std::vector<char> infoLog (logLength);
+    glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
+    handleError ("Failed to compile shader", infoLog.data ());
+    glDeleteShader (shader);
+    return 0;
+  }
+
+  return shader;
 }
 
 void PlatformManager::decideOpenGLVersion () {
@@ -258,12 +284,18 @@ void PlatformManager::mainLoop () {
 
   SDL_Event event;
   while (!done) {
-
-    updateWindowSize ();
+    this->updateWindowSize ();
 
     while (SDL_PollEvent (&event)) {
       ImGui_ImplSDL2_ProcessEvent (&event);
       done = inputHandler.processEvent (event); // own event processing
+      if (done) {
+#ifdef __EMSCRIPTEN__
+        emscripten_cancel_main_loop (); // Stop the main loop in Emscripten
+#else
+        done = true; // Stop the main loop on desktop platforms
+#endif
+      }
     }
 
     ImGui_ImplOpenGL3_NewFrame ();
@@ -274,18 +306,58 @@ void PlatformManager::mainLoop () {
     if (showDemo)
       ImGui::ShowDemoWindow (&showDemo);
 
+    bool showOverlay = true;
+    if (showOverlay) {
+      printOverlayWindow ();
+    }
+
     // Render GUI
     ImGui::Render ();
     glViewport (0, 0, windowWidth_, windowHeight_);
     glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
-    glClear (GL_COLOR_BUFFER_BIT);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Render background shader
     float time = SDL_GetTicks () / 1000.0f;
     renderBackground (time);
 
     ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
     SDL_GL_SwapWindow (window_);
   }
+}
+
+void PlatformManager::scaleImGui (int userScaleFactor) {
+  ImGuiStyle defaultStyle_;
+  float scalingFactor = userScaleFactor * devicePixelRatio_;
+  float fontSize = BASE_FONT_SIZE * scalingFactor;
+  fontSize = std::max (1.0f, roundf (fontSize));
+  ImFontConfig fontCfg = {};
+  fontCfg.RasterizerDensity = scalingFactor;
+  static const ImWchar czRanges[]
+      = { 0x0020, 0x00FF, 0x0100, 0x017F, 0x0200, 0x024F, 0x0401, 0x045F, 0x0402, 0x045F,
+          0x0403, 0x045F, 0x0404, 0x045F, 0x0405, 0x045F, 0x0406, 0x045F, 0x0407, 0x045F,
+          0x0408, 0x045F, 0x0409, 0x045F, 0x040A, 0x045F, 0x040B, 0x045F, 0x040C, 0x045F,
+          0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
+  std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
+  io_->Fonts->Clear ();
+  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
+  io_->Fonts->Build ();
+  // Reset style to defaults
+  ImGui::GetStyle () = defaultStyle_;
+  // and then apply scaling
+  ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
+}
+
+void PlatformManager::printOverlayWindow () {
+  bool showOverlay = true;
+  ImGui::PushID ("OverlayWindow");
+  ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize
+                                 | ImGuiWindowFlags_NoSavedSettings
+                                 | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+  ImGui::Begin ("Overlay", &showOverlay, windowFlags);
+  ImGui::Text (this->getOverlayContent ().c_str ());
+  ImGui::End ();
+  ImGui::PopID ();
 }
 
 void PlatformManager::handleSDLError (const char* message) const {

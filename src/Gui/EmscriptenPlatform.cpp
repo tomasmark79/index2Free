@@ -9,62 +9,62 @@
 #include <emscripten/html5.h>
 
 EM_JS (float, getDevicePixelRatio, (), { return window.devicePixelRatio || 1.0; });
-EM_JS (bool, isHighDPIDisplay, (), { return window.devicePixelRatio > 1.0; });
 EM_JS (int, getScreenWidth, (), { return screen.width; });
 EM_JS (int, getScreenHeight, (), { return screen.height; });
+EM_JS (int, getWindowWidth, (), { return window.innerWidth; });
+EM_JS (int, getWindowHeight, (), { return window.innerHeight; });
 
 EM_JS (bool, isTouchDevice, (),
        { return 'ontouchstart' in window || navigator.maxTouchPoints > 0; });
-
 EM_JS (bool, isDocumentFullscreen, (), {
   return !!(document.fullscreenElement || document.webkitFullscreenElement
             || document.mozFullScreenElement || document.msFullscreenElement);
 });
-
 // clang-format off
 EM_JS (bool, isMobileDevice, (), {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 });
 // clang-format on
 
-struct DisplayInfo {
-  float devicePixelRatio;
-  int windowWidth, windowHeight;
-
-  bool isScaled () const {
-    return devicePixelRatio > 1.0f;
-  }
-
-  float getEffectiveScale () const {
-    return devicePixelRatio;
-  }
-};
-
+// Function to get display information
 EM_JS (void, getDisplayInfo, (float* devicePixelRatio, int* windowWidth, int* windowHeight), {
   setValue (devicePixelRatio, window.devicePixelRatio || 1.0, 'float');
   setValue (windowWidth, window.innerWidth, 'i32');
   setValue (windowHeight, window.innerHeight, 'i32');
 });
 
+struct EmscriptenDisplayInfo {
+  float devicePixelRatio;
+  int windowWidth, windowHeight;
+  bool isScaled () const {
+    return devicePixelRatio > 1.0f;
+  }
+  float getEffectiveScale () const {
+    return isScaled () ? devicePixelRatio : 1.0f;
+  }
+  void update () {
+    getDisplayInfo (&devicePixelRatio, &windowWidth, &windowHeight);
+  }
+};
+
 void EmscriptenPlatform::initialize () {
-  createSDL2Window ("Default SDL2 Window", 1920, 1080);
-  createOpenGLContext ();
-  // setSwapInterval (1); // Enable vsync // not available in Emscripten
-  initializeGLEW (); // // GLEW is not needed in Emscripten
+  createSDL2Window ("Default SDL2 Window", windowWidth_, windowHeight_);
+  createOpenGLContext (1);
+  initializeGLEW ();
   setupQuad ();
   setupShaders ();
   initializeImGui ();
   ImGuiStyle& style = ImGui::GetStyle ();
   setupImGuiStyle (style);
-  scaleImGui ();
   updateWindowSize ();
+  scaleImGui (this->userConfigurableScale_);
   initInputHandlerCallbacks ();
-
-  // In Emscripten, we need to set up the main loop differently
+  // Start the Emscripten main loop
   emscripten_set_main_loop_arg (
       [] (void* userData) {
         EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
-        platform->frameStep ();
+        // platform->frameStep ();
+        platform->mainLoop ();
       },
       this, 0, 1);
 }
@@ -99,7 +99,8 @@ void EmscriptenPlatform::createSDL2Window (const char* title, int width, int hei
   SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
 
   // For Emscripten, we don't need HIGHDPI flag as it's handled differently
-  SDL_WindowFlags windowFlags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  SDL_WindowFlags windowFlags
+      = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
   window_ = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
                               height, windowFlags);
@@ -108,15 +109,6 @@ void EmscriptenPlatform::createSDL2Window (const char* title, int width, int hei
   }
   windowWidth_ = width;
   windowHeight_ = height;
-}
-
-void EmscriptenPlatform::createOpenGLContext () {
-  decideOpenGLVersion ();
-  glContext_ = SDL_GL_CreateContext (window_);
-  if (!glContext_) {
-    handleSDLError ("Failed to create OpenGL context");
-  }
-  SDL_GL_MakeCurrent (window_, glContext_);
 }
 
 void EmscriptenPlatform::setupShaders () {
@@ -161,32 +153,6 @@ void EmscriptenPlatform::setupShaders () {
   // Clean up shaders after linking
   glDeleteShader (vertexShader);
   glDeleteShader (fragmentShader);
-}
-
-GLuint EmscriptenPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
-  GLuint shader = glCreateShader (shaderType);
-  if (shader == 0) {
-    handleGLError ("Failed to create shader");
-    return 0;
-  }
-
-  glShaderSource (shader, 1, &shaderSource, nullptr);
-  glCompileShader (shader);
-
-  // Check for compilation errors
-  GLint success;
-  glGetShaderiv (shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLint logLength;
-    glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
-    std::vector<char> infoLog (logLength);
-    glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
-    handleError ("Failed to compile shader", infoLog.data ());
-    glDeleteShader (shader);
-    return 0;
-  }
-
-  return shader;
 }
 
 void EmscriptenPlatform::renderBackground (float deltaTime) {
@@ -251,42 +217,31 @@ void EmscriptenPlatform::initializeImGui () {
   ImGui_ImplOpenGL3_Init (glsl_version_);
 }
 
-// float ImGui_ImplSDL2_GetContentScaleForDisplay (int display_index);
-// float ImGui_ImplSDL2_GetContentScaleForDisplay (int display_index) {
-// #if SDL_HAS_PER_MONITOR_DPI
-//   //                           MODIFIED THE LINE BELOW
-//   #if !defined(__APPLE__) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
-//   float dpi = 0.0f;
-//   if (SDL_GetDisplayDPI (display_index, &dpi, nullptr, nullptr) == 0)
-//     return dpi / 96.0f;
-//   #endif
-// #endif
-//   IM_UNUSED (display_index);
-//   return 1.0f;
-// }
+std::string EmscriptenPlatform::getOverlayContent () {
+  EmscriptenDisplayInfo lastDisplayInfo;
+  lastDisplayInfo.update ();
+  std::string oC = "";
 
-void EmscriptenPlatform::showScaleFactor () {
-  ImGui::Text ("Scale factor: %.2f", userConfigurableScale_);
-  ImGui::Text ("Window size: %dx%d", windowWidth_, windowHeight_);
-  ImGui::Text ("Font size: %.2f", ImGui::GetFontSize ());
+  oC += fmt::format ("=== Overlay ===\n");
+  oC += fmt::format ("Windows Width: {}\n", windowWidth_);
+  oC += fmt::format ("Windows Height: {}\n", windowHeight_);
+  oC += fmt::format ("Device Pixel Ratio: {:.2f}\n", devicePixelRatio_);
+  oC += fmt::format ("Base Font Size: {:.2f}\n", BASE_FONT_SIZE);
+  oC += fmt::format ("ImGui Display Size: {:.0f} x {:.0f}\n", io_->DisplaySize.x,
+                     io_->DisplaySize.y);
+  oC += fmt::format ("ImGui Display Framebuffer Scale: {:.2f} x {:.2f}\n",
+                     io_->DisplayFramebufferScale.x, io_->DisplayFramebufferScale.y);
+  oC += fmt::format ("=== Web Display Info ===\n");
+  oC += fmt::format ("Browser Window: {}x{}\n", lastDisplayInfo.windowWidth,
+                     lastDisplayInfo.windowHeight);
+  oC += fmt::format ("Is Scaled Display: {}\n", lastDisplayInfo.isScaled () ? "YES" : "NO");
+  oC += fmt::format ("Effective Scale: {:.2f}\n", lastDisplayInfo.getEffectiveScale ());
+  oC += fmt::format ("Is Touch Device: {}\n", isTouchDevice () ? "YES" : "NO");
+  oC += fmt::format ("Is Mobile Device: {}\n", isMobileDevice () ? "YES" : "NO");
+  oC += fmt::format ("{:.3f} ms/frame ({:.1f} FPS)", 1000.0f / ImGui::GetIO ().Framerate,
+                     ImGui::GetIO ().Framerate);
 
-  static DisplayInfo lastDisplayInfo = {};
-  static float lastUpdate = 0.0f;
-
-  // Update display info every second
-  float currentTime = SDL_GetTicks () / 1000.0f;
-  if (currentTime - lastUpdate > 1.0f) {
-    getDisplayInfo (&lastDisplayInfo.devicePixelRatio, &lastDisplayInfo.windowWidth,
-                    &lastDisplayInfo.windowHeight);
-    lastUpdate = currentTime;
-  }
-
-  ImGui::Separator ();
-  ImGui::Text ("=== Web Display Info ===");
-  ImGui::Text ("Device Pixel Ratio: %.2f", lastDisplayInfo.devicePixelRatio);
-  ImGui::Text ("Browser Window: %dx%d", lastDisplayInfo.windowWidth, lastDisplayInfo.windowHeight);
-  ImGui::Text ("Is Scaled Display: %s", lastDisplayInfo.isScaled () ? "YES" : "NO");
-  ImGui::Text ("Effective Scale: %.2f", lastDisplayInfo.getEffectiveScale ());
+  return oC;
 }
 
 void EmscriptenPlatform::updateWindowSize () {
@@ -295,96 +250,8 @@ void EmscriptenPlatform::updateWindowSize () {
   if (width != windowWidth_ || height != windowHeight_) {
     windowWidth_ = width;
     windowHeight_ = height;
-    devicePixelRatio_ = getDevicePixelRatio ();
+    devicePixelRatio_ = getDevicePixelRatio (); // JavaScript function to get device pixel ratio
     io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
     io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
-    glViewport (0, 0, (float)windowWidth_, (float)windowHeight_);
   }
-}
-
-void EmscriptenPlatform::scaleImGui () {
-  ImGuiStyle defaultStyle_;
-  this->updateWindowSize ();
-  float scalingFactor = userConfigurableScale_ * devicePixelRatio_;
-  float fontSize = BASE_FONT_SIZE * scalingFactor;
-  fontSize = std::max (1.0f, roundf (fontSize));
-  ImFontConfig fontCfg = {};
-  fontCfg.RasterizerDensity = devicePixelRatio_;
-  static const ImWchar czRanges[]
-      = { 0x0020, 0x00FF, 0x0100, 0x017F, 0x0200, 0x024F, 0x0401, 0x045F, 0x0402, 0x045F,
-          0x0403, 0x045F, 0x0404, 0x045F, 0x0405, 0x045F, 0x0406, 0x045F, 0x0407, 0x045F,
-          0x0408, 0x045F, 0x0409, 0x045F, 0x040A, 0x045F, 0x040B, 0x045F, 0x040C, 0x045F,
-          0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
-  std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
-  io_->Fonts->Clear ();
-  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
-  io_->Fonts->Build ();
-
-  // Recreate font texture
-  // ImGui_ImplOpenGL3_DestroyFontsTexture ();
-  // ImGui_ImplOpenGL3_CreateFontsTexture ();
-
-  // Reset style to defaults
-  ImGui::GetStyle () = defaultStyle_;
-
-  // and then apply scaling
-  ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
-}
-
-void EmscriptenPlatform::frameStep () {
-
-  updateWindowSize ();
-
-  SDL_Event event;
-  // Process all pending events
-  while (SDL_PollEvent (&event)) {
-    ImGui_ImplSDL2_ProcessEvent (&event);
-    bool shouldExit = inputHandler.processEvent (event);
-    if (shouldExit) {
-      // In Emscripten, we can't just exit the loop, we need to cancel the main loop
-      emscripten_cancel_main_loop ();
-      return;
-    }
-  }
-
-  // Start new ImGui frame
-  ImGui_ImplOpenGL3_NewFrame ();
-  ImGui_ImplSDL2_NewFrame ();
-  ImGui::NewFrame ();
-
-  // Show demo window
-  bool showDemo = true;
-  if (showDemo)
-    ImGui::ShowDemoWindow (&showDemo);
-
-  bool showOverlay = true;
-  if (showOverlay) {
-
-    ImGui::PushID ("OverlayWindow");
-    ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize
-                                   | ImGuiWindowFlags_NoSavedSettings
-                                   | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-
-    ImGui::Begin ("Overlay", &showOverlay, windowFlags);
-    {
-      showScaleFactor ();
-    }
-    ImGui::End ();
-    ImGui::PopID ();
-  }
-
-  // Render GUI
-  ImGui::Render ();
-  // glViewport (0, 0, (int)io_->DisplaySize.x, (int)io_->DisplaySize.y);
-  glViewport (0, 0, windowWidth_, windowHeight_);
-  glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
-  glClear (GL_COLOR_BUFFER_BIT);
-
-  // Render background shader
-  float time = SDL_GetTicks () / 1000.0f;
-  renderBackground (time);
-
-  // Render ImGui
-  ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
-  SDL_GL_SwapWindow (window_);
 }

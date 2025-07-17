@@ -24,7 +24,6 @@
 // #include <glm/gtc/matrix_transform.hpp>
 
 void initializePlatform ();
-void shutdownPlatform ();
 
 class PlatformManager {
 
@@ -35,6 +34,9 @@ public:
 protected:
   int windowWidth_ = 1920;
   int windowHeight_ = 1080;
+
+  float devicePixelRatio_ = 1.0f; // fallback value
+
   const float BASE_FONT_SIZE = 16.0f;
   InputHandler inputHandler;
   SDL_GLContext glContext_ = nullptr;
@@ -51,28 +53,28 @@ public:
 
 protected:
   virtual void createSDL2Window (const char* title, int width, int height) = 0;
-  virtual void updateWindowSize () = 0;
 
-protected:
-  void decideOpenGLVersion ();
-  virtual void createOpenGLContext () = 0;
+
   virtual void initializeGLEW () = 0;
-  void setupQuad ();
   virtual void setupShaders () = 0;
-  virtual GLuint compileShader (const char* shaderSource, GLenum shaderType) = 0;
   virtual void renderBackground (float deltaTime) = 0;
-
-protected:
-  void setupImGuiStyle (ImGuiStyle& style);
   virtual void initializeImGui () = 0;
-  virtual void showScaleFactor () = 0;
-  virtual void scaleImGui () = 0;
-
-protected:
+  virtual void updateWindowSize () = 0;
+  virtual std::string getOverlayContent () = 0;
+  
+  protected:
+  // Set vsync to 1 for vertical sync
+  // Set swap interval to 0 for no vsync
+  // Set swap interval to -1 for adaptive vsync
+  void createOpenGLContext (int swapInterval);
+  GLuint compileShader (const char* shaderSource, GLenum shaderType);
   void initInputHandlerCallbacks ();
-
-protected:
+  void decideOpenGLVersion ();
+  void setupQuad ();
+  void setupImGuiStyle (ImGuiStyle& style);
   void mainLoop ();
+  void scaleImGui (int userScaleFactor = 1);
+  void printOverlayWindow ();
 
 protected:
   void handleSDLError (const char* message) const;

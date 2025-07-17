@@ -40,7 +40,6 @@ namespace dotname {
   }
 
   CoreLib::~CoreLib () {
-    shutdownPlatform ();
     LOG_D_STREAM << libName_ << " ... destructed" << std::endl;
   }
 
