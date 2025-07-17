@@ -4,9 +4,8 @@
 #include <Shaders/dyinguniverse/fragment_def.hpp>
 
 void DesktopPlatform::initialize () {
-  createSDL2Window ("Default SDL2 Window", 1920, 1080);
-  createOpenGLContext ();
-  setSwapInterval (1); // Enable vsync
+  createSDL2Window ("Default SDL2 Window", windowWidth_, windowHeight_);
+  createOpenGLContext (1);
   initializeGLEW ();
   setupQuad ();
   setupShaders ();
@@ -14,7 +13,7 @@ void DesktopPlatform::initialize () {
   ImGuiStyle& style = ImGui::GetStyle ();
   setupImGuiStyle (style);
   updateWindowSize ();
-  scaleImGui ();
+  scaleImGui (this->userConfigurableScale_);
   initInputHandlerCallbacks ();
   mainLoop ();
 }
@@ -36,8 +35,9 @@ void DesktopPlatform::shutdown () {
 
 void DesktopPlatform::createSDL2Window (const char* title, int width, int height) {
 
+// Enable IME UI on desktop platforms
 #ifdef SDL_HINT_IME_SHOW_UI
-  SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1"); // Enable IME UI on desktop platforms
+  SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1");
 #endif
 
   if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
@@ -59,30 +59,6 @@ void DesktopPlatform::createSDL2Window (const char* title, int width, int height
   }
   windowWidth_ = width;
   windowHeight_ = height;
-}
-
-void DesktopPlatform::updateWindowSize () {
-  int width, height;
-  SDL_GetWindowSize (window_, &width, &height);
-  if (width != windowWidth_ || height != windowHeight_) {
-    windowWidth_ = width;
-    windowHeight_ = height;
-    io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
-    io_->DisplayFramebufferScale = ImVec2 (1.0f, 1.0f);
-  }
-}
-
-void DesktopPlatform::createOpenGLContext () {
-  decideOpenGLVersion ();
-  glContext_ = SDL_GL_CreateContext (window_);
-  if (!glContext_) {
-    handleSDLError ("Failed to create OpenGL context");
-  }
-  SDL_GL_MakeCurrent (window_, glContext_);
-}
-
-void DesktopPlatform::setSwapInterval (int interval) {
-  SDL_GL_SetSwapInterval (interval); // vsync only on desktop
 }
 
 void DesktopPlatform::initializeGLEW () {
@@ -132,32 +108,6 @@ void DesktopPlatform::setupShaders () {
   glDeleteShader (fragmentShader);
 }
 
-GLuint DesktopPlatform::compileShader (const char* shaderSource, GLenum shaderType) {
-  GLuint shader = glCreateShader (shaderType);
-  if (shader == 0) {
-    handleGLError ("Failed to create shader");
-    return 0;
-  }
-
-  glShaderSource (shader, 1, &shaderSource, nullptr);
-  glCompileShader (shader);
-
-  // Check for compilation errors
-  GLint success;
-  glGetShaderiv (shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLint logLength;
-    glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
-    std::vector<char> infoLog (logLength);
-    glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
-    handleError ("Failed to compile shader", infoLog.data ());
-    glDeleteShader (shader);
-    return 0;
-  }
-
-  return shader;
-}
-
 void DesktopPlatform::renderBackground (float deltaTime) {
   // float width = (float)windowWidth_;
   // float height = (float)windowHeight_;
@@ -204,38 +154,52 @@ void DesktopPlatform::initializeImGui () {
   ImGui_ImplOpenGL3_Init (glsl_version_);
 }
 
-void DesktopPlatform::showScaleFactor () {
-  ImGui::Text ("Scale factor: %.2f", userConfigurableScale_);
-  ImGui::Text ("Window size: %dx%d", windowWidth_, windowHeight_);
-  ImGui::Text ("Font size: %.2f", ImGui::GetFontSize ());
+std::string DesktopPlatform::getOverlayContent () {
+  std::string oC = "";
+  oC += ("=== Overlay Window ===\n");
+  oC += ("Window Size: " + std::to_string (windowWidth_) + "x" + std::to_string (windowHeight_)
+         + "\n");
+  oC += ("ImGui Display Size: " + std::to_string (io_->DisplaySize.x) + " x "
+         + std::to_string (io_->DisplaySize.y) + "\n");
+  oC += ("User Configurable Scale: " + std::to_string (userConfigurableScale_) + "\n");
+  oC += ("Device Pixel Ratio: " + std::to_string (devicePixelRatio_) + "\n");
+  oC += ("Base Font Size: " + std::to_string (BASE_FONT_SIZE) + "\n");
+  oC += ("ImGui Display Framebuffer Scale: " + std::to_string (io_->DisplayFramebufferScale.x)
+         + " x " + std::to_string (io_->DisplayFramebufferScale.y) + "\n");
+  oC += ("=== Desktop Display Info ===\n");
+  oC += ("SDL Window ID: " + std::to_string (SDL_GetWindowID (window_)) + "\n");
+  oC += ("SDL Window Display Index: " + std::to_string (SDL_GetWindowDisplayIndex (window_))
+         + "\n");
+  int displayIndex = SDL_GetWindowDisplayIndex (window_);
+  float ddpi, hdpi, vdpi;
+  if (SDL_GetDisplayDPI (displayIndex, &ddpi, &hdpi, &vdpi) == 0) {
+    oC += ("Display DPI: " + std::to_string (ddpi) + " (DDPI), " + std::to_string (hdpi)
+           + " (HDPI), " + std::to_string (vdpi) + " (VDPI)\n");
+    devicePixelRatio_ = ddpi / 96.0f; // 96 DPI is the standard baseline
+  } else {
+    oC += ("Failed to get display DPI\n");
+    devicePixelRatio_ = 1.0f; // Fallback to 1.0 if DPI detection fails
+  }
+  oC += fmt::format ("{:.3f} ms/frame ({:.1f} FPS)", 1000.0f / ImGui::GetIO ().Framerate,
+                     ImGui::GetIO ().Framerate);
+  return oC;
 }
 
-void DesktopPlatform::scaleImGui () {
-  ImGuiStyle defaultStyle_;
-  io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
-  io_->DisplayFramebufferScale = ImVec2 (1.0f, 1.0f);
-  float scalingFactor = userConfigurableScale_;
-  float fontSize = BASE_FONT_SIZE * scalingFactor;
-  fontSize = std::max (1.0f, roundf (fontSize));
-  ImFontConfig fontCfg = {};
-  fontCfg.RasterizerDensity = scalingFactor;
-  static const ImWchar czRanges[]
-      = { 0x0020, 0x00FF, 0x0100, 0x017F, 0x0200, 0x024F, 0x0401, 0x045F, 0x0402, 0x045F,
-          0x0403, 0x045F, 0x0404, 0x045F, 0x0405, 0x045F, 0x0406, 0x045F, 0x0407, 0x045F,
-          0x0408, 0x045F, 0x0409, 0x045F, 0x040A, 0x045F, 0x040B, 0x045F, 0x040C, 0x045F,
-          0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
-  std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
-  io_->Fonts->Clear ();
-  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
-  io_->Fonts->Build ();
-
-  // Recreate font texture
-  // ImGui_ImplOpenGL3_DestroyFontsTexture ();
-  // ImGui_ImplOpenGL3_CreateFontsTexture ();
-
-  // Reset style to defaults
-  ImGui::GetStyle () = defaultStyle_;
-
-  // and then apply scaling
-  ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
+void DesktopPlatform::updateWindowSize () {
+  int width, height;
+  SDL_GL_GetDrawableSize (window_, &width, &height);
+  if (width != windowWidth_ || height != windowHeight_) {
+    windowWidth_ = width;
+    windowHeight_ = height;
+    // Desktop platforms - use SDL to get DPI pixel ratio
+    float ddpi, hdpi, vdpi;
+    int displayIndex = SDL_GetWindowDisplayIndex (window_);
+    if (SDL_GetDisplayDPI (displayIndex, &ddpi, &hdpi, &vdpi) == 0) {
+      devicePixelRatio_ = ddpi / 96.0f; // 96 DPI is the standard baseline
+    } else {
+      devicePixelRatio_ = 1.0f; // Fallback to 1.0 if DPI detection fails
+    }
+    io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
+    io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
+  }
 }

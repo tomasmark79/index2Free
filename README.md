@@ -4,20 +4,9 @@
 
 ## Index2
 
-Refactored public release of website [digitalspace.name](https://digitalspace.name).  
+## Refactored public release of C++ Portfolio Website [digitalspace.name](https://digitalspace.name/new/index.html)  
 
-Refactoring is in progress.  
-> 45% done.  
-
-TODO
-
-- improve UI positioner, improve FPS overlay
-- add independent window with language flags to global translations
-- add independent window with `+` `-` buttons for scale UI + add and improve original UI Scaller
-- implement emscripten compatibility (80% done)
-- ~~input handler to self class due responsibility~~
-- ~~storing and loading UI strings from external json file `customstrings.json`~~
-
+>WIP - 75% done  
 
 ## License
 
@@ -27,6 +16,3 @@ Copyright (c) 2024-2025 Tomáš Mark
 ## Disclaimer
 
 This template is provided "as is," without any guarantees regarding its functionality.
-
-[👆🏻](#index2Free)
----

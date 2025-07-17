@@ -2,39 +2,28 @@
 #define __EMSCRIPTENPLATFORM_H__
 
 #include "PlatformManager.hpp"
-
-#ifdef __EMSCRIPTEN__
-  #include <emscripten.h>
-  #include <emscripten/html5.h>
-#endif
+#include <emscripten.h>
+#include <emscripten/html5.h>
 
 class EmscriptenPlatform : public PlatformManager {
-
-  float userConfigurableScale_ = 1.0f;
-  float devicePixelRatio_ = 1.0f;
 
 public:
   EmscriptenPlatform () = default;
   ~EmscriptenPlatform () override = default;
 
-  void initialize () override;
-  void shutdown () override;
-  void createSDL2Window (const char* title, int width, int height) override;
-  void updateWindowSize () override;
-  void createOpenGLContext () override;
-  void initializeGLEW () override {};
-  void setSwapInterval (int interval) {};
-  void SDL_GL_SetSwapInterval (int interval);
-  void setupShaders () override;
-  GLuint compileShader (const char* shaderSource, GLenum shaderType) override;
-  void renderBackground (float deltaTime) override;
-  void initializeImGui () override;
-  void showScaleFactor () override;
-  void scaleImGui () override;
+  float userConfigurableScale_ = 1.0f;
 
-#ifdef __EMSCRIPTEN__
-  void frameStep (); // Single frame step for Emscripten main loop
-#endif
+  virtual void initialize () override;
+  virtual void shutdown () override;
+
+protected:
+  virtual void createSDL2Window (const char* title, int width, int height) override;
+  virtual void initializeGLEW () override { /*Emscripten does not use GLEW*/ };
+  virtual void setupShaders () override;
+  virtual void renderBackground (float deltaTime) override;
+  virtual void initializeImGui () override;
+  virtual std::string getOverlayContent () override;
+  virtual void updateWindowSize () override;
 };
 
 #endif // __EMSCRIPTENPLATFORM_H__

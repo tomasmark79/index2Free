@@ -5,25 +5,22 @@
 
 class DesktopPlatform : public PlatformManager {
 
-  float userConfigurableScale_ = 2.0f;
-
 public:
   DesktopPlatform () = default;
   ~DesktopPlatform () override = default;
 
-  void initialize () override;
-  void shutdown () override;
-  void createSDL2Window (const char* title, int width, int height) override;
-  void updateWindowSize () override;
-  void createOpenGLContext () override;
-  void setSwapInterval (int interval);
-  void initializeGLEW () override;
-  void setupShaders () override;
-  GLuint compileShader (const char* shaderSource, GLenum shaderType) override;
-  void renderBackground (float deltaTime) override;
-  void initializeImGui () override;
-  void showScaleFactor () override;
-  void scaleImGui () override;
-};
+  float userConfigurableScale_ = 2.0f;
 
+  virtual void initialize () override;
+  virtual void shutdown () override;
+
+protected:
+  virtual void createSDL2Window (const char* title, int width, int height) override;
+  virtual void initializeGLEW () override;
+  virtual void setupShaders () override;
+  virtual void renderBackground (float deltaTime) override;
+  virtual void initializeImGui () override;
+  virtual std::string getOverlayContent () override;
+  virtual void updateWindowSize () override;
+};
 #endif // __DESKTOPPLATFORM_H__
