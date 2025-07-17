@@ -65,6 +65,7 @@ protected:
 protected:
   void setupImGuiStyle (ImGuiStyle& style);
   virtual void initializeImGui () = 0;
+  virtual void showScaleFactor () = 0;
   virtual void scaleImGui () = 0;
 
 protected:

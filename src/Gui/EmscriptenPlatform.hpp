@@ -10,7 +10,8 @@
 
 class EmscriptenPlatform : public PlatformManager {
 
-  float userConfigurableScale_ = 2.0f;
+  float userConfigurableScale_ = 1.0f;
+  float devicePixelRatio_ = 1.0f;
 
 public:
   EmscriptenPlatform () = default;
@@ -21,12 +22,14 @@ public:
   void createSDL2Window (const char* title, int width, int height) override;
   void updateWindowSize () override;
   void createOpenGLContext () override;
-  void setSwapInterval (int interval);
-  void initializeGLEW () override;
+  void initializeGLEW () override {};
+  void setSwapInterval (int interval) {};
+  void SDL_GL_SetSwapInterval (int interval);
   void setupShaders () override;
   GLuint compileShader (const char* shaderSource, GLenum shaderType) override;
   void renderBackground (float deltaTime) override;
   void initializeImGui () override;
+  void showScaleFactor () override;
   void scaleImGui () override;
 
 #ifdef __EMSCRIPTEN__

@@ -13,8 +13,8 @@ void DesktopPlatform::initialize () {
   initializeImGui ();
   ImGuiStyle& style = ImGui::GetStyle ();
   setupImGuiStyle (style);
-  scaleImGui ();
   updateWindowSize ();
+  scaleImGui ();
   initInputHandlerCallbacks ();
   mainLoop ();
 }
@@ -204,6 +204,12 @@ void DesktopPlatform::initializeImGui () {
   ImGui_ImplOpenGL3_Init (glsl_version_);
 }
 
+void DesktopPlatform::showScaleFactor () {
+  ImGui::Text ("Scale factor: %.2f", userConfigurableScale_);
+  ImGui::Text ("Window size: %dx%d", windowWidth_, windowHeight_);
+  ImGui::Text ("Font size: %.2f", ImGui::GetFontSize ());
+}
+
 void DesktopPlatform::scaleImGui () {
   ImGuiStyle defaultStyle_;
   io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
@@ -224,8 +230,8 @@ void DesktopPlatform::scaleImGui () {
   io_->Fonts->Build ();
 
   // Recreate font texture
-  ImGui_ImplOpenGL3_DestroyFontsTexture ();
-  ImGui_ImplOpenGL3_CreateFontsTexture ();
+  // ImGui_ImplOpenGL3_DestroyFontsTexture ();
+  // ImGui_ImplOpenGL3_CreateFontsTexture ();
 
   // Reset style to defaults
   ImGui::GetStyle () = defaultStyle_;

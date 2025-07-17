@@ -22,6 +22,7 @@ public:
   GLuint compileShader (const char* shaderSource, GLenum shaderType) override;
   void renderBackground (float deltaTime) override;
   void initializeImGui () override;
+  void showScaleFactor () override;
   void scaleImGui () override;
 };
 

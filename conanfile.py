@@ -48,7 +48,7 @@ class DotNameCppRecipe(ConanFile):
     def requirements(self):
         self.requires("fmt/[~11.1]")            # required by cpm package
         self.requires("nlohmann_json/[~3.12]")  # required by DotNameUtils::JsonUtils
-        self.requires("imgui/1.91.8")
+        self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
         
         if self.settings.os != "Emscripten":
