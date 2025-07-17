@@ -67,7 +67,7 @@ protected:
   virtual void initializeImGui () = 0;
   virtual void scaleImGui () = 0;
 
-  protected:
+protected:
   void initInputHandlerCallbacks ();
 
 protected:
@@ -81,6 +81,5 @@ protected:
   void handleError (const char* message, const char* error) const;
   void handleError (const char* message, int errorCode) const;
 };
-
 
 #endif // __PLATFORMMANAGER_H__

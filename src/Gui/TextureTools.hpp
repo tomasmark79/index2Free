@@ -13,7 +13,7 @@
 
 namespace TextureLoader {
   inline bool LoadTextureFromMemory (const void* data, size_t data_size, SDL_Renderer* renderer,
-                              SDL_Texture** out_texture, int* out_width, int* out_height) {
+                                     SDL_Texture** out_texture, int* out_width, int* out_height) {
     int image_width = 0, image_height = 0, channels = 0;
     unsigned char* image_data = stbi_load_from_memory (static_cast<const unsigned char*> (data),
                                                        static_cast<int> (data_size), &image_width,
@@ -50,7 +50,7 @@ namespace TextureLoader {
   }
 
   inline bool LoadTextureFromFile (const std::filesystem::path& file_path, SDL_Renderer* renderer,
-                            SDL_Texture** out_texture, int* out_width, int* out_height) {
+                                   SDL_Texture** out_texture, int* out_width, int* out_height) {
     std::ifstream file (file_path, std::ios::binary | std::ios::ate);
     if (!file) {
       LOG_E_FMT ("Failed to open file: %s", file_path.string ().c_str ());
