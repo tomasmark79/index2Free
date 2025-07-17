@@ -259,6 +259,8 @@ void PlatformManager::mainLoop () {
   SDL_Event event;
   while (!done) {
 
+    updateWindowSize ();
+
     while (SDL_PollEvent (&event)) {
       ImGui_ImplSDL2_ProcessEvent (&event);
       done = inputHandler.processEvent (event); // own event processing
