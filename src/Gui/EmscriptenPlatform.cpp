@@ -45,36 +45,32 @@ struct EmscriptenDisplayInfo {
 };
 
 void EmscriptenPlatform::initialize () {
-  createSDL2Window ("Default SDL2 Window", windowWidth_, windowHeight_);
+  createSDL2Window ("Emscripten SDL2 Window", windowWidth_, windowHeight_);
   createOpenGLContext (1);
-  initializeGLEW ();
   setupQuad ();
   setupShaders ();
   initializeImGui ();
-  ImGuiStyle& style = ImGui::GetStyle ();
-  setupImGuiStyle (style);
   updateWindowSize ();
   scaleImGui (this->userConfigurableScale_);
   initInputHandlerCallbacks ();
-  // Start the Emscripten main loop
   emscripten_set_main_loop_arg (
       [] (void* userData) {
         EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
-        // platform->frameStep ();
         platform->mainLoop ();
       },
       this, 0, 1);
 }
 
-void EmscriptenPlatform::initializeImGui () {
-  IMGUI_CHECKVERSION ();
-  ImGui::CreateContext ();
-  io_ = &ImGui::GetIO ();
-  io_->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-  io_->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-
-  ImGui_ImplSDL2_InitForOpenGL (window_, glContext_);
-  ImGui_ImplOpenGL3_Init (glsl_version_);
+void EmscriptenPlatform::updateWindowSize () {
+  int width, height;
+  SDL_GL_GetDrawableSize (window_, &width, &height);
+  if (width != windowWidth_ || height != windowHeight_) {
+    windowWidth_ = width;
+    windowHeight_ = height;
+    devicePixelRatio_ = getDevicePixelRatio (); // JavaScript function to get device pixel ratio
+    io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
+    io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
+  }
 }
 
 std::string EmscriptenPlatform::getOverlayContent () {
@@ -102,16 +98,4 @@ std::string EmscriptenPlatform::getOverlayContent () {
                      ImGui::GetIO ().Framerate);
 
   return oC;
-}
-
-void EmscriptenPlatform::updateWindowSize () {
-  int width, height;
-  SDL_GL_GetDrawableSize (window_, &width, &height);
-  if (width != windowWidth_ || height != windowHeight_) {
-    windowWidth_ = width;
-    windowHeight_ = height;
-    devicePixelRatio_ = getDevicePixelRatio (); // JavaScript function to get device pixel ratio
-    io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
-    io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
-  }
 }

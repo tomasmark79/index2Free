@@ -12,14 +12,11 @@ public:
   ~EmscriptenPlatform () override = default;
 
   float userConfigurableScale_ = 1.0f;
-
   virtual void initialize () override;
 
 protected:
-  virtual void initializeGLEW () override { /*Emscripten does not use GLEW*/ };
-  virtual void initializeImGui () override;
-  virtual std::string getOverlayContent () override;
   virtual void updateWindowSize () override;
+  virtual std::string getOverlayContent () override;
 };
 
 #endif // __EMSCRIPTENPLATFORM_H__
