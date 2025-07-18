@@ -6,8 +6,6 @@
 
 ## Refactored public release of C++ Portfolio Website [digitalspace.name](https://digitalspace.name/new/index.html)  
 
-<video src='https://github.com/tomasmark79/index2Free/blob/main/index2Free-demo.mp4'/>
-
 >refactored 80%
 
 ## ToDo
