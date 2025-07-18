@@ -6,6 +6,11 @@
 
 ## Refactored public release of C++ Portfolio Website [digitalspace.name](https://digitalspace.name/new/index.html)  
 
+
+Not sure why no one mentioned this simplest way which works as of today(2022). You can use the below syntax everywhere on Github, including markdown files like Readme.md
+
+<video src='index2Free-demo.mp4'/>
+
 >refactored 80%
 
 ## ToDo
