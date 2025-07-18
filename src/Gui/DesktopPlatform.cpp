@@ -1,8 +1,5 @@
 #include "DesktopPlatform.hpp"
 
-#include <Shaders/dyinguniverse/vertex_def.hpp>
-#include <Shaders/dyinguniverse/fragment_def.hpp>
-
 void DesktopPlatform::initialize () {
   createSDL2Window ("Default SDL2 Window", windowWidth_, windowHeight_);
   createOpenGLContext (1);
@@ -18,49 +15,6 @@ void DesktopPlatform::initialize () {
   mainLoop ();
 }
 
-void DesktopPlatform::shutdown () {
-  if (window_) {
-    SDL_DestroyWindow (window_);
-    window_ = nullptr;
-  }
-  if (glContext_) {
-    SDL_GL_DeleteContext (glContext_);
-    glContext_ = nullptr;
-  }
-  if (imguiContext_) {
-    ImGui::DestroyContext (imguiContext_);
-    imguiContext_ = nullptr;
-  }
-}
-
-void DesktopPlatform::createSDL2Window (const char* title, int width, int height) {
-
-// Enable IME UI on desktop platforms
-#ifdef SDL_HINT_IME_SHOW_UI
-  SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1");
-#endif
-
-  if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-    handleSDLError ("Failed to initialize SDL");
-    return;
-  }
-
-  // Needed before creating the window
-  SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute (SDL_GL_DEPTH_SIZE, 24);
-  SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
-
-  SDL_WindowFlags windowFlags
-      = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window_ = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
-                              height, windowFlags);
-  if (!window_) {
-    handleSDLError ("Failed to create window");
-  }
-  windowWidth_ = width;
-  windowHeight_ = height;
-}
-
 void DesktopPlatform::initializeGLEW () {
 
 #ifndef IMGUI_IMPL_OPENGL_ES2
@@ -69,78 +23,6 @@ void DesktopPlatform::initializeGLEW () {
     return;
   }
 #endif
-}
-
-void DesktopPlatform::setupShaders () {
-  // Compile vertex shader
-  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
-  if (vertexShader == 0) {
-    handleError ("Failed to compile vertex shader");
-    return;
-  }
-
-  // Compile fragment shader
-  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
-  if (fragmentShader == 0) {
-    handleError ("Failed to compile fragment shader");
-    glDeleteShader (vertexShader);
-    return;
-  }
-
-  // Create shader program
-  shaderProgram_ = glCreateProgram ();
-  glAttachShader (shaderProgram_, vertexShader);
-  glAttachShader (shaderProgram_, fragmentShader);
-  glLinkProgram (shaderProgram_);
-
-  // Check for linking errors
-  GLint success;
-  glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
-  if (!success) {
-    handleError ("Failed to link shader program");
-    glDeleteShader (vertexShader);
-    glDeleteShader (fragmentShader);
-    return;
-  }
-
-  // Clean up shaders after linking
-  glDeleteShader (vertexShader);
-  glDeleteShader (fragmentShader);
-}
-
-void DesktopPlatform::renderBackground (float deltaTime) {
-  // float width = (float)windowWidth_;
-  // float height = (float)windowHeight_;
-  // glViewport (0, 0, width, height);
-  GLboolean depthTestEnabled;
-  glGetBooleanv (GL_DEPTH_TEST, &depthTestEnabled);
-  glDisable (GL_DEPTH_TEST);
-
-  glUseProgram (shaderProgram_);
-  glBindVertexArray (vao_);
-
-  GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
-  GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
-  GLint iTimeDeltaLoc = glGetUniformLocation (shaderProgram_, "iTimeDelta");
-  GLint iFrameLoc = glGetUniformLocation (shaderProgram_, "iFrame");
-  GLint iMouseLoc = glGetUniformLocation (shaderProgram_, "iMouse");
-
-  if (iResolutionLoc != -1)
-    glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
-  if (iTimeLoc != -1)
-    glUniform1f (iTimeLoc, deltaTime);
-  if (iTimeDeltaLoc != -1)
-    glUniform1f (iTimeDeltaLoc, 0.016f);
-  if (iFrameLoc != -1)
-    glUniform1i (iFrameLoc, (int)(deltaTime * 60.0f));
-  if (iMouseLoc != -1)
-    glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-  if (depthTestEnabled) {
-    glEnable (GL_DEPTH_TEST);
-  }
 }
 
 void DesktopPlatform::initializeImGui () {

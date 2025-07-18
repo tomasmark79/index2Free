@@ -49,32 +49,32 @@ protected:
 
 public:
   virtual void initialize () = 0;
-  virtual void shutdown () = 0;
+  void shutdown ();
 
 protected:
-  virtual void createSDL2Window (const char* title, int width, int height) = 0;
 
 
-  virtual void initializeGLEW () = 0;
-  virtual void setupShaders () = 0;
-  virtual void renderBackground (float deltaTime) = 0;
-  virtual void initializeImGui () = 0;
-  virtual void updateWindowSize () = 0;
-  virtual std::string getOverlayContent () = 0;
-  
-  protected:
-  // Set vsync to 1 for vertical sync
-  // Set swap interval to 0 for no vsync
-  // Set swap interval to -1 for adaptive vsync
-  void createOpenGLContext (int swapInterval);
-  GLuint compileShader (const char* shaderSource, GLenum shaderType);
-  void initInputHandlerCallbacks ();
-  void decideOpenGLVersion ();
-  void setupQuad ();
-  void setupImGuiStyle (ImGuiStyle& style);
-  void mainLoop ();
-  void scaleImGui (int userScaleFactor = 1);
-  void printOverlayWindow ();
+virtual void initializeGLEW () = 0;
+virtual void initializeImGui () = 0;
+virtual void updateWindowSize () = 0;
+virtual std::string getOverlayContent () = 0;
+
+protected:
+// Set vsync to 1 for vertical sync
+// Set swap interval to 0 for no vsync
+// Set swap interval to -1 for adaptive vsync
+void createSDL2Window (const char* title, int width, int height);
+void createOpenGLContext (int swapInterval);
+GLuint compileShader (const char* shaderSource, GLenum shaderType);
+void initInputHandlerCallbacks ();
+void decideOpenGLVersion ();
+void setupQuad ();
+void setupImGuiStyle (ImGuiStyle& style);
+void mainLoop ();
+void scaleImGui (int userScaleFactor = 1);
+void printOverlayWindow ();
+void setupShaders ();
+void renderBackground (float deltaTime);
 
 protected:
   void handleSDLError (const char* message) const;
