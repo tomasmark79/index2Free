@@ -12,6 +12,9 @@ static std::unique_ptr<EmscriptenPlatform> gPlatform = nullptr;
 static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #endif
 
+#include <Shaders/dyinguniverse/vertex_def.hpp>
+#include <Shaders/dyinguniverse/fragment_def.hpp>
+
 // Function to initialize the platform
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
@@ -21,6 +24,49 @@ void initializePlatform () {
   gPlatform = std::make_unique<DesktopPlatform> ();
   gPlatform->initialize ();
 #endif
+}
+
+void PlatformManager::shutdown () {
+  if (window_) {
+    SDL_DestroyWindow (window_);
+    window_ = nullptr;
+  }
+  if (glContext_) {
+    SDL_GL_DeleteContext (glContext_);
+    glContext_ = nullptr;
+  }
+  if (imguiContext_) {
+    ImGui::DestroyContext (imguiContext_);
+    imguiContext_ = nullptr;
+  }
+}
+
+void PlatformManager::createSDL2Window (const char* title, int width, int height) {
+
+  // Enable IME UI on desktop platforms
+#ifdef SDL_HINT_IME_SHOW_UI
+  SDL_SetHint (SDL_HINT_IME_SHOW_UI, "1");
+#endif
+
+  if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+    handleSDLError ("Failed to initialize SDL");
+    return;
+  }
+
+  // Needed before creating the window
+  SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute (SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
+
+  SDL_WindowFlags windowFlags
+      = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+  window_ = SDL_CreateWindow (title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
+                              height, windowFlags);
+  if (!window_) {
+    handleSDLError ("Failed to create window");
+  }
+  windowWidth_ = width;
+  windowHeight_ = height;
 }
 
 void PlatformManager::createOpenGLContext (int swapInterval) {
@@ -358,6 +404,98 @@ void PlatformManager::printOverlayWindow () {
   ImGui::Text (this->getOverlayContent ().c_str ());
   ImGui::End ();
   ImGui::PopID ();
+}
+
+void PlatformManager::setupShaders () {
+#if defined(IMGUI_IMPL_OPENGL_ES3)
+  // WebGL 2.0 / OpenGL ES 3.0
+  GLuint vertexShader = compileShader (vertexShader300, GL_VERTEX_SHADER);
+  GLuint fragmentShader = compileShader (fragmentShader300, GL_FRAGMENT_SHADER);
+#elif defined(IMGUI_IMPL_OPENGL_ES2)
+  // WebGL 1.0 / OpenGL ES 2.0
+  GLuint vertexShader = compileShader (vertexShader200, GL_VERTEX_SHADER);
+  GLuint fragmentShader = compileShader (fragmentShader200, GL_FRAGMENT_SHADER);
+#else
+  // Desktop OpenGL
+  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
+  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
+#endif
+
+  if (vertexShader == 0) {
+    handleError ("Failed to compile vertex shader");
+    return;
+  }
+
+  if (fragmentShader == 0) {
+    handleError ("Failed to compile fragment shader");
+    glDeleteShader (vertexShader);
+    return;
+  }
+
+  // Create shader program
+  shaderProgram_ = glCreateProgram ();
+  glAttachShader (shaderProgram_, vertexShader);
+  glAttachShader (shaderProgram_, fragmentShader);
+  glLinkProgram (shaderProgram_);
+
+  // Check for linking errors
+  GLint success;
+  glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
+  if (!success) {
+    handleError ("Failed to link shader program");
+  }
+
+  // Clean up shaders after linking
+  glDeleteShader (vertexShader);
+  glDeleteShader (fragmentShader);
+}
+
+void PlatformManager::renderBackground (float deltaTime) {
+  GLboolean depthTestEnabled;
+  glGetBooleanv (GL_DEPTH_TEST, &depthTestEnabled);
+  glDisable (GL_DEPTH_TEST);
+
+  glUseProgram (shaderProgram_);
+
+#if defined(IMGUI_IMPL_OPENGL_ES3) \
+    || (!defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3))
+  // OpenGL ES 3.0+ or desktop OpenGL - VAO is available
+  glBindVertexArray (vao_);
+#else
+  // OpenGL ES 2.0 - VAO not available, bind buffers manually
+  glBindBuffer (GL_ARRAY_BUFFER, vbo_);
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, ebo_);
+  glEnableVertexAttribArray (0);
+  glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof (float), (void*)0);
+#endif
+
+  GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
+  GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
+  GLint iTimeDeltaLoc = glGetUniformLocation (shaderProgram_, "iTimeDelta");
+  GLint iFrameLoc = glGetUniformLocation (shaderProgram_, "iFrame");
+  GLint iMouseLoc = glGetUniformLocation (shaderProgram_, "iMouse");
+
+  if (iResolutionLoc != -1)
+    glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
+  if (iTimeLoc != -1)
+    glUniform1f (iTimeLoc, deltaTime);
+  if (iTimeDeltaLoc != -1)
+    glUniform1f (iTimeDeltaLoc, 0.016f);
+  if (iFrameLoc != -1)
+    glUniform1i (iFrameLoc, (int)(deltaTime * 60.0f));
+  if (iMouseLoc != -1)
+    glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
+
+  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+  // OpenGL ES 2.0 - cleanup manually bound attributes
+  glDisableVertexAttribArray (0);
+#endif
+
+  if (depthTestEnabled) {
+    glEnable (GL_DEPTH_TEST);
+  }
 }
 
 void PlatformManager::handleSDLError (const char* message) const {
