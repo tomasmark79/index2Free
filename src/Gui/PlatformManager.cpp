@@ -255,24 +255,24 @@ void PlatformManager::initializeImGui () {
   ImGui_ImplSDL2_InitForOpenGL (window_, glContext_);
   ImGui_ImplOpenGL3_Init (glsl_version_);
 
-  styleBackup_ = &ImGui::GetStyle ();
+  defaultStyle_ = ImGui::GetStyle ();
+  style_ = ImGui::GetStyle ();
   applyStyleLila (style_);
-  style_ = &ImGui::GetStyle ();
 }
 
 // Apply the Lila style to ImGui
-void PlatformManager::applyStyleLila (ImGuiStyle* dst) {
-  ImGuiStyle* style = dst ? dst : &ImGui::GetStyle ();
-  ImVec4* colors = style->Colors;
+void PlatformManager::applyStyleLila (ImGuiStyle& style) {
 
-  style->WindowRounding = 8.0f; // Větší zaoblení pro futuristický look
-  style->FrameRounding = 6.0f;
-  style->GrabRounding = 6.0f;
-  style->ScrollbarRounding = 6.0f;
-  style->FrameBorderSize = 1.5f; // Tlustší okraje pro neonový efekt
-  style->WindowBorderSize = 2.0f;
-  style->WindowPadding = ImVec2 (12.0f, 12.0f); // Větší padding
-  style->FramePadding = ImVec2 (8.0f, 4.0f);
+  ImVec4* colors = style.Colors;
+
+  style.WindowRounding = 8.0f; // Větší zaoblení pro futuristický look
+  style.FrameRounding = 6.0f;
+  style.GrabRounding = 6.0f;
+  style.ScrollbarRounding = 6.0f;
+  style.FrameBorderSize = 1.5f; // Tlustší okraje pro neonový efekt
+  style.WindowBorderSize = 2.0f;
+  style.WindowPadding = ImVec2 (12.0f, 12.0f); // Větší padding
+  style.FramePadding = ImVec2 (8.0f, 4.0f);
 
   // Tmavý futuristický theme - FIALOVÁ PALETA
   colors[ImGuiCol_Text]
@@ -375,9 +375,9 @@ void PlatformManager::mainLoop () {
 }
 
 // Scale ImGui based on user-defined scale factor
-void PlatformManager::scaleImGui (int userScaleFactor) {
-  float scalingFactor = userScaleFactor * devicePixelRatio_;
-  float fontSize = BASE_FONT_SIZE * scalingFactor;
+void PlatformManager::scaleImGui (float userScaleFactor) {
+  float scalingFactor = userScaleFactor;
+  float fontSize = BASE_FONT_SIZE * scalingFactor * devicePixelRatio_;
   fontSize = std::max (1.0f, roundf (fontSize));
   ImFontConfig fontCfg = {};
   fontCfg.RasterizerDensity = scalingFactor;
@@ -387,12 +387,18 @@ void PlatformManager::scaleImGui (int userScaleFactor) {
           0x0408, 0x045F, 0x0409, 0x045F, 0x040A, 0x045F, 0x040B, 0x045F, 0x040C, 0x045F,
           0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
   std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
+
+  ImGui::GetIO ().FontGlobalScale = scalingFactor;
   io_->Fonts->Clear ();
   io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
 
-  // and then apply scaling
+  // Always start scale from default style sizes
+  ImGui::GetStyle () = defaultStyle_;
   ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
+
+  // At least apply the style to the current ImGui context
+  applyStyleLila (ImGui::GetStyle ());
 }
 
 // Render the background using the shader program
@@ -455,13 +461,10 @@ std::string PlatformManager::getOverlayContent () {
                      io_->DisplaySize.y);
   oC += fmt::format ("ImGui Display Framebuffer Scale: {:.2f} x {:.2f}\n",
                      io_->DisplayFramebufferScale.x, io_->DisplayFramebufferScale.y);
-#ifdef __EMSCRIPTEN__
-  oC += fmt::format ("User Scale Emscripten: {:.2f}\n", userScaleFactor4Emscripten_);
-#else
-  oC += fmt::format ("User Scale Factor: {:.2f}\n", userScaleFactor4Desktop_);
-#endif
+  oC += fmt::format ("User Scale Factor: {:.2f}\n", userScaleFactor);
   oC += fmt::format ("Device Pixel Ratio: {:.2f}\n", devicePixelRatio_);
   oC += fmt::format ("Base Font Size: {:.2f}\n", BASE_FONT_SIZE);
+  oC += fmt::format ("Font Size: {:.2f}\n", io_->FontGlobalScale * BASE_FONT_SIZE);
 
   return oC;
 }
@@ -491,11 +494,12 @@ void PlatformManager::printOverlayWindow () {
 
 // Initialize input handler callbacks
 void PlatformManager::initInputHandlerCallbacks () {
-  inputHandler.setScaleCallback ([this] (float delta) {
-    // userConfigurableScale_ += delta;
-    // userConfigurableScale_ = std::max (0.1f, userConfigurableScale_);
-    // requiredScaleChange_ = true;
+  inputHandler.setScaleCallback ([&] (float scaleFactor) {
+    this->userScaleFactor += scaleFactor;
+    this->userScaleFactor = std::max (0.1f, this->userScaleFactor);
+    this->scaleImGui (userScaleFactor);
   });
+
   inputHandler.setActionCallback (InputAction::ToggleFullscreen, [this] () { /*toggleFullscreen ()*/
                                                                              ;
   });

@@ -42,8 +42,11 @@ protected:
   int windowWidth_ = DEFAULT_WINDOW_WIDTH;
   int windowHeight_ = DEFAULT_WINDOW_HEIGHT;
 
-  float userScaleFactor4Emscripten_ = DEFAULT_SCALING_FACTOR_EMSCRIPTEN;
-  float userScaleFactor4Desktop_ = DEFAULT_SCALING_FACTOR_DESKTOP;
+#ifdef __EMSCRIPTEN__
+  float userScaleFactor = DEFAULT_SCALING_FACTOR_EMSCRIPTEN;
+#else
+  float userScaleFactor = DEFAULT_SCALING_FACTOR_DESKTOP;
+#endif
   float devicePixelRatio_ = FALLBACK_DEVICE_PIXEL_RATIO;
 
   InputHandler inputHandler;
@@ -52,7 +55,10 @@ protected:
   GLuint vao_, vbo_, ebo_, shaderProgram_;
   ImGuiContext* imguiContext_ = nullptr;
   ImGuiIO* io_;
-  ImGuiStyle *style_, *styleBackup_;
+  
+  ImGuiStyle defaultStyle_, style_;
+  
+  
   const char* glsl_version_ = "#version 130"; // Default GLSL version
 
 public:
@@ -70,9 +76,9 @@ protected:
   void decideOpenGLVersion ();
   void setupQuad ();
   void initializeImGui ();
-  void applyStyleLila (ImGuiStyle* dst);
+  void applyStyleLila (ImGuiStyle& style);
   void mainLoop ();
-  void scaleImGui (int userScaleFactor = 1);
+  void scaleImGui (float userScaleFactor = 1.0f);
   void renderBackground (float deltaTime);
   std::string getOverlayContent ();
   void printOverlayWindow ();
