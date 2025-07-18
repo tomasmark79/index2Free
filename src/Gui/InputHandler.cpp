@@ -43,13 +43,13 @@ void InputHandler::processKeyboardInput (const SDL_Event& event) {
   const SDL_Keycode key = event.key.keysym.sym;
 
   if ((key == SDLK_PLUS || key == SDLK_KP_PLUS || key == SDLK_EQUALS) && scaleCallback_) {
-    scaleCallback_ (0.1f);
+    scaleCallback_ (0.05f);
     LOG_D_STREAM << "InputHandler::processKeyboardInput: Scale up by 0.1" << std::endl;
     return;
   }
 
   if ((key == SDLK_MINUS || key == SDLK_KP_MINUS) && scaleCallback_) {
-    scaleCallback_ (-0.1f);
+    scaleCallback_ (-0.05f);
     LOG_D_STREAM << "InputHandler::processKeyboardInput: Scale down by 0.1" << std::endl;
     return;
   }

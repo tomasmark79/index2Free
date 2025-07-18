@@ -51,7 +51,7 @@ void EmscriptenPlatform::initialize () {
   setupShaders ();
   initializeImGui ();
   updateWindowSize ();
-  scaleImGui (this->userScaleFactor4Emscripten_);
+  scaleImGui (this->userScaleFactor);
   initInputHandlerCallbacks ();
   emscripten_set_main_loop_arg (
       [] (void* userData) {

@@ -7,7 +7,7 @@ void DesktopPlatform::initialize () {
   setupShaders ();
   initializeImGui ();
   updateWindowSize ();
-  scaleImGui (this->userScaleFactor4Desktop_);
+  scaleImGui (this->userScaleFactor);
   initInputHandlerCallbacks ();
   mainLoop ();
 }
