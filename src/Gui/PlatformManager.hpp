@@ -23,6 +23,13 @@
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 
+#define DEFAULT_WINDOW_WIDTH 1920
+#define DEFAULT_WINDOW_HEIGHT 1080
+#define DEFAULT_SCALING_FACTOR_DESKTOP (float)2.0f
+#define DEFAULT_SCALING_FACTOR_EMSCRIPTEN (float)1.0f
+#define FALLBACK_DEVICE_PIXEL_RATIO (float)1.0f
+#define BASE_FONT_SIZE (float)16.0f
+
 void initializePlatform ();
 
 class PlatformManager {
@@ -32,9 +39,12 @@ public:
   virtual ~PlatformManager () = default;
 
 protected:
-  int windowWidth_ = 1920, windowHeight_ = 1080;
-  float devicePixelRatio_ = 1.0f; // fallback value
-  const float BASE_FONT_SIZE = 16.0f;
+  int windowWidth_ = DEFAULT_WINDOW_WIDTH;
+  int windowHeight_ = DEFAULT_WINDOW_HEIGHT;
+
+  float userScaleFactor4Emscripten_ = DEFAULT_SCALING_FACTOR_EMSCRIPTEN;
+  float userScaleFactor4Desktop_ = DEFAULT_SCALING_FACTOR_DESKTOP;
+  float devicePixelRatio_ = FALLBACK_DEVICE_PIXEL_RATIO;
 
   InputHandler inputHandler;
   SDL_GLContext glContext_ = nullptr;
@@ -51,7 +61,6 @@ public:
 
 protected:
   virtual void updateWindowSize () = 0;
-  virtual std::string getOverlayContent () = 0;
 
 protected:
   void createSDL2Window (const char* title, int width, int height);
@@ -61,14 +70,13 @@ protected:
   void decideOpenGLVersion ();
   void setupQuad ();
   void initializeImGui ();
-  void applyStyleLila(ImGuiStyle* dst);
+  void applyStyleLila (ImGuiStyle* dst);
   void mainLoop ();
   void scaleImGui (int userScaleFactor = 1);
   void renderBackground (float deltaTime);
+  std::string getOverlayContent ();
   void printOverlayWindow ();
-  
   void initInputHandlerCallbacks (); // TODO
-
   void handleSDLError (const char* message) const;
   void handleGLError (const char* message) const;
   void handleImGuiError (const char* message) const;
