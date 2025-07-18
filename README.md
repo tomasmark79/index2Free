@@ -6,7 +6,17 @@
 
 ## Refactored public release of C++ Portfolio Website [digitalspace.name](https://digitalspace.name/new/index.html)  
 
->WIP - 75% done  
+>refactored 80%
+
+## ToDo
+ 
+- audio implementation + audio player
+- window position (centered, corners, etc.)
+- build window structure from json declaration
+- scaling ui on the fly
+- fx for printed text within windows (typewriter, etc.)
+- shader switcher on the fly (more vertex & fragment shaders builtin)
+- ImGui theme switcher on the fly (more themes builtin)
 
 ## License
 
