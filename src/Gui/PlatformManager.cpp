@@ -388,7 +388,7 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
           0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
   std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
 
-  ImGui::GetIO ().FontGlobalScale = scalingFactor;
+  // ImGui::GetIO ().FontGlobalScale = scalingFactor;
   io_->Fonts->Clear ();
   io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
