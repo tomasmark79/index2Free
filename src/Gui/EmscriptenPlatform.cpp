@@ -51,7 +51,7 @@ void EmscriptenPlatform::initialize () {
   setupShaders ();
   initializeImGui ();
   updateWindowSize ();
-  scaleImGui (this->userConfigurableScale_);
+  scaleImGui (this->userScaleFactor4Emscripten_);
   initInputHandlerCallbacks ();
   emscripten_set_main_loop_arg (
       [] (void* userData) {
@@ -71,31 +71,4 @@ void EmscriptenPlatform::updateWindowSize () {
     io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
     io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
   }
-}
-
-std::string EmscriptenPlatform::getOverlayContent () {
-  EmscriptenDisplayInfo lastDisplayInfo;
-  lastDisplayInfo.update ();
-  std::string oC = "";
-
-  oC += fmt::format ("=== Overlay ===\n");
-  oC += fmt::format ("Windows Width: {}\n", windowWidth_);
-  oC += fmt::format ("Windows Height: {}\n", windowHeight_);
-  oC += fmt::format ("Device Pixel Ratio: {:.2f}\n", devicePixelRatio_);
-  oC += fmt::format ("Base Font Size: {:.2f}\n", BASE_FONT_SIZE);
-  oC += fmt::format ("ImGui Display Size: {:.0f} x {:.0f}\n", io_->DisplaySize.x,
-                     io_->DisplaySize.y);
-  oC += fmt::format ("ImGui Display Framebuffer Scale: {:.2f} x {:.2f}\n",
-                     io_->DisplayFramebufferScale.x, io_->DisplayFramebufferScale.y);
-  oC += fmt::format ("=== Web Display Info ===\n");
-  oC += fmt::format ("Browser Window: {}x{}\n", lastDisplayInfo.windowWidth,
-                     lastDisplayInfo.windowHeight);
-  oC += fmt::format ("Is Scaled Display: {}\n", lastDisplayInfo.isScaled () ? "YES" : "NO");
-  oC += fmt::format ("Effective Scale: {:.2f}\n", lastDisplayInfo.getEffectiveScale ());
-  oC += fmt::format ("Is Touch Device: {}\n", isTouchDevice () ? "YES" : "NO");
-  oC += fmt::format ("Is Mobile Device: {}\n", isMobileDevice () ? "YES" : "NO");
-  oC += fmt::format ("{:.3f} ms/frame ({:.1f} FPS)", 1000.0f / ImGui::GetIO ().Framerate,
-                     ImGui::GetIO ().Framerate);
-
-  return oC;
 }

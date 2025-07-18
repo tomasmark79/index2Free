@@ -444,15 +444,47 @@ void PlatformManager::renderBackground (float deltaTime) {
   }
 }
 
+// Get the content for the overlay window
+std::string PlatformManager::getOverlayContent () {
+  std::string oC = "";
+  oC += fmt::format ("{:.3f} ms/frame {:.1f} FPS\n", 1000.0f / ImGui::GetIO ().Framerate,
+                     ImGui::GetIO ().Framerate);
+
+  oC += fmt::format ("Drawable Size: {} x {}\n", windowWidth_, windowHeight_);
+  oC += fmt::format ("ImGui Display Size: {:.0f} x {:.0f}\n", io_->DisplaySize.x,
+                     io_->DisplaySize.y);
+  oC += fmt::format ("ImGui Display Framebuffer Scale: {:.2f} x {:.2f}\n",
+                     io_->DisplayFramebufferScale.x, io_->DisplayFramebufferScale.y);
+#ifdef __EMSCRIPTEN__
+  oC += fmt::format ("User Scale Emscripten: {:.2f}\n", userScaleFactor4Emscripten_);
+#else
+  oC += fmt::format ("User Scale Factor: {:.2f}\n", userScaleFactor4Desktop_);
+#endif
+  oC += fmt::format ("Device Pixel Ratio: {:.2f}\n", devicePixelRatio_);
+  oC += fmt::format ("Base Font Size: {:.2f}\n", BASE_FONT_SIZE);
+
+  return oC;
+}
+
 // Print the overlay window with the current content
 void PlatformManager::printOverlayWindow () {
+  static float lastUpdateTime = 0.0f;
+  static std::string cachedOverlayContent = "";
+  float currentTime = SDL_GetTicks () / 1000.0f;
+
+  // Update content only once per second
+  if (currentTime - lastUpdateTime >= 1.0f) {
+    cachedOverlayContent = this->getOverlayContent ();
+    lastUpdateTime = currentTime;
+  }
+
   bool showOverlay = true;
   ImGui::PushID ("OverlayWindow");
   ImGuiWindowFlags windowFlags = ImGuiWindowFlags_AlwaysAutoResize
                                  | ImGuiWindowFlags_NoSavedSettings
                                  | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
   ImGui::Begin ("Overlay", &showOverlay, windowFlags);
-  ImGui::Text ("%s", this->getOverlayContent ().c_str ());
+  ImGui::Text ("%s", cachedOverlayContent.c_str ());
   ImGui::End ();
   ImGui::PopID ();
 }
@@ -527,5 +559,3 @@ void PlatformManager::handleError (const char* message, const char* error) const
 void PlatformManager::handleError (const char* message, int errorCode) const {
   LOG_E_FMT ("%s: %d", message, errorCode);
 };
-
-
