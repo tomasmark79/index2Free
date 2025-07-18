@@ -32,19 +32,17 @@ public:
   virtual ~PlatformManager () = default;
 
 protected:
-  int windowWidth_ = 1920;
-  int windowHeight_ = 1080;
-
+  int windowWidth_ = 1920, windowHeight_ = 1080;
   float devicePixelRatio_ = 1.0f; // fallback value
-
   const float BASE_FONT_SIZE = 16.0f;
+
   InputHandler inputHandler;
   SDL_GLContext glContext_ = nullptr;
   SDL_Window* window_ = nullptr;
   GLuint vao_, vbo_, ebo_, shaderProgram_;
   ImGuiContext* imguiContext_ = nullptr;
   ImGuiIO* io_;
-  ImGuiStyle* style_;
+  ImGuiStyle *style_, *styleBackup_;
   const char* glsl_version_ = "#version 130"; // Default GLSL version
 
 public:
@@ -52,31 +50,25 @@ public:
   void shutdown ();
 
 protected:
-
-
-virtual void initializeGLEW () = 0;
-virtual void initializeImGui () = 0;
-virtual void updateWindowSize () = 0;
-virtual std::string getOverlayContent () = 0;
+  virtual void updateWindowSize () = 0;
+  virtual std::string getOverlayContent () = 0;
 
 protected:
-// Set vsync to 1 for vertical sync
-// Set swap interval to 0 for no vsync
-// Set swap interval to -1 for adaptive vsync
-void createSDL2Window (const char* title, int width, int height);
-void createOpenGLContext (int swapInterval);
-GLuint compileShader (const char* shaderSource, GLenum shaderType);
-void initInputHandlerCallbacks ();
-void decideOpenGLVersion ();
-void setupQuad ();
-void setupImGuiStyle (ImGuiStyle& style);
-void mainLoop ();
-void scaleImGui (int userScaleFactor = 1);
-void printOverlayWindow ();
-void setupShaders ();
-void renderBackground (float deltaTime);
+  void createSDL2Window (const char* title, int width, int height);
+  void createOpenGLContext (int swapInterval);
+  void setupShaders ();
+  GLuint compileShader (const char* shaderSource, GLenum shaderType);
+  void decideOpenGLVersion ();
+  void setupQuad ();
+  void initializeImGui ();
+  void applyStyleLila(ImGuiStyle* dst);
+  void mainLoop ();
+  void scaleImGui (int userScaleFactor = 1);
+  void renderBackground (float deltaTime);
+  void printOverlayWindow ();
+  
+  void initInputHandlerCallbacks (); // TODO
 
-protected:
   void handleSDLError (const char* message) const;
   void handleGLError (const char* message) const;
   void handleImGuiError (const char* message) const;
