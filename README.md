@@ -10,10 +10,11 @@
 
 ## ToDo
  
-- scaling ui on the fly
+- ~~scaling ui on the fly with + - keys~~
 - window position (centered, corners, etc.)
 - audio implementation + audio player
 - shader switcher on the fly (more vertex & fragment shaders builtin)
+- shder fragment convertor
 - ImGui theme switcher on the fly (more themes builtin)
 - build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
