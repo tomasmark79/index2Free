@@ -390,7 +390,7 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
 
   // ImGui::GetIO ().FontGlobalScale = scalingFactor;
   io_->Fonts->Clear ();
-  io_->Fonts->AddFontFromFileTTF (fnt.c_str (), fontSize, &fontCfg, czRanges);
+  io_->Fonts->AddFontFromFileTTF (fnt.string().c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
 
   // Always start scale from default style sizes
