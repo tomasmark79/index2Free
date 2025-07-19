@@ -53,6 +53,13 @@ class ProjectTemplateRecipe(ConanFile):
         # Force static linking for all dependencies (recommended for templates)
         self.options["*"].shared = False
         
+        # if mingw used
+        if self.settings.os == "Windows" and self.settings.compiler == "gcc":
+            self.options["freetype"].with_png = False
+            self.options["freetype"].with_brotli = False
+            self.options["freetype"].with_zlib = False
+            self.options["freetype"].with_bzip2 = False
+
         # Handle fPIC option for static libraries on non-Windows systems
         if self.settings.os != "Windows":
             if self.options.fPIC:
@@ -64,9 +71,14 @@ class ProjectTemplateRecipe(ConanFile):
         self.requires("nlohmann_json/[~3.12]")  # JSON parsing library
         self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
+        self.requires("libpng/1.6.50", override=True)   # PNG image format support  
+        self.requires("libiconv/1.17", override=True)   # Unicode conversion library
 
         if self.settings.os != "Emscripten":
-            #self.requires("glew/2.2.0")
+            # if mingw used
+            if self.settings.os == "Windows" and self.settings.compiler == "gcc":
+                self.requires("glew/2.2.0")
+                
             self.requires("sdl/2.32.2", override=True)  # Use the latest stable version of SDL
             self.requires("sdl_image/2.8.2")
             self.requires("sdl_ttf/2.24.0")

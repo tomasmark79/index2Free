@@ -151,12 +151,6 @@ set(sources ${common_sources} ${platform_sources})
 add_library(${LIBRARY_NAME})
 target_sources(${LIBRARY_NAME} PRIVATE ${headers} ${sources})
 
-# Target-specific statické linkování
-if(USE_STATIC_RUNTIME AND NOT MSVC)
-    target_link_options(${LIBRARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
-    target_compile_options(${LIBRARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
-endif()
-
 apply_ipo(${LIBRARY_NAME})
 apply_hardening(${LIBRARY_NAME})
 apply_sanitizers(${LIBRARY_NAME})
