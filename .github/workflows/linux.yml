@@ -28,7 +28,7 @@ jobs:
       - name: install conan to system
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip ccache libgleq-dev
+          sudo apt-get install -y python3-pip ccache libglew-dev
           pip3 install conan
 
       - name: create Conan cache
