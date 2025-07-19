@@ -3,21 +3,11 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, CMakeDeps
 from conan.tools.system import package_manager
 from conan.tools.files import copy
-from conan.errors import ConanInvalidConfiguration
-
-# Template Configuration Notes:
-# ----------------------------------------------------------
-# 1. Change 'name' to match your project
-# 2. Update requirements() with your actual dependencies
-# 3. Uncomment system_requirements() if you need system packages
-# 4. Consider adding validation for critical settings
-# 5. This template avoids cmake_layout() for custom build structure
-# ----------------------------------------------------------
 
 # DO NOT use cmake_layout(self) HERE!
 # ------------------------------------------------- --
-    # This template is using custom layout          --
-    # to define build output layout!                --
+    # DotNameCpp is using self layout               --
+    # to define build ouput layout!                 --
     # ├── Build                                     --
     #     ├── Artefacts - tarballs of installation  --
     #     ├── Install - final installation          --
@@ -25,8 +15,9 @@ from conan.errors import ConanInvalidConfiguration
     #     └── Standalone - standalone build         --
 # ------------------------------------------------- --
 
-class ProjectTemplateRecipe(ConanFile):
+class DotNameCppRecipe(ConanFile):
     name = "corelib"
+    version = "1.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
 
@@ -37,6 +28,17 @@ class ProjectTemplateRecipe(ConanFile):
         tc = CMakeToolchain(self)
         self.update_cmake_presets("CMakePresets.json")
 
+        if self.settings.os == "Emscripten":
+            print("Emscripten detected by Conan build system")
+            tc.variables["PLATFORM"] = "Web"
+            tc.variables["CMAKE_EXE_LINKER_FLAGS"] = "-s USE_GLFW=3"
+        
+        # # Pro statické linkování runtime knihoven na Linuxu
+        # if self.settings.os == "Linux" and not str(self.settings.compiler).startswith("Visual"):
+        #     tc.variables["CMAKE_CXX_STANDARD_LIBRARIES"] = "-static-libgcc -static-libstdc++"
+        #     tc.variables["CMAKE_CXX_IMPLICIT_LINK_LIBRARIES"] = "gcc_s;gcc;c;gcc_s;gcc"
+        #     print("Configured static C++ runtime linking")
+
         # libs/emscripten/emscripten_mainloop_stub.h content copied by hand to /src/bindings
         copy(self, "*opengl3*", os.path.join(self.dependencies["imgui"].package_folder,
             "res", "bindings"), os.path.join(self.source_folder, "src/bindings"))
@@ -44,28 +46,27 @@ class ProjectTemplateRecipe(ConanFile):
              "res", "bindings"), os.path.join(self.source_folder, "src/bindings"))
         
         tc.generate()
-
+        
         # Patchování Conan CMake souborů pro odstranění stdc++ z system libs
         self.patch_remove_stdcpp_from_system_libs()
-        
+
     # Consuming recipe
     def configure(self):
-        # Force static linking for all dependencies (recommended for templates)
-        self.options["*"].shared = False
+        self.options["*"].shared = False # this replaced shared flag from SolutionController.py and works
         
-        # Handle fPIC option for static libraries on non-Windows systems
-        if self.settings.os != "Windows":
-            if self.options.fPIC:
-                self.options["*"].fPIC = True
-
+        # # Pro statické linkování - upravit system libs aby neobsahovaly stdc++
+        # if self.settings.os == "Linux":
+        #     # Přepsat system libs pro libmodplug aby neobsahoval stdc++
+        #     self.options["libmodplug"].shared = False
     def requirements(self):
-        # Core dependencies - adjust as needed for your project
-        self.requires("fmt/[~11.1]")            # Modern formatting library
-        self.requires("nlohmann_json/[~3.12]")  # JSON parsing library
+        self.requires("fmt/[~11.1]")            # required by cpm package
+        self.requires("nlohmann_json/[~3.12]")  # required by DotNameUtils::JsonUtils
         self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
-
+        
         if self.settings.os != "Emscripten":
+            #self.requires("libglvnd/1.5.0", override=True)  # Use libglvnd for OpenGL support
+            #self.requires("opengl/system")
             #self.requires("glew/2.2.0")
             self.requires("sdl/2.32.2", override=True)  # Use the latest stable version of SDL
             self.requires("sdl_image/2.8.2")
@@ -73,34 +74,11 @@ class ProjectTemplateRecipe(ConanFile):
             self.requires("sdl_mixer/2.8.0")
             self.requires("sdl_net/2.2.0")
 
-        # Additional dependencies - uncomment as needed:
-        # self.requires("gtest/1.16.0")           # Google Test (if CPM not used)
-        # self.requires("spdlog/[~1.12]")         # Logging library
-        # self.requires("zlib/[~1.3]")            # Compression library
-        # self.requires("yaml-cpp/0.8.0")         # YAML parsing
-        # self.requires("boost/[~1.82]")          # Boost libraries
-
-    #def build_requirements(self):
-        # self.tool_requires("cmake/[>3.14]")
-
-    # def system_requirements(self):
-        # dnf = package_manager.Dnf(self)
-        # dnf.install("SDL2-devel")
-        # apt = package_manager.Apt(self)
-        # apt.install(["libsdl2-dev"])
+    def build_requirements(self):
+        self.tool_requires("cmake/[>3.14]")
 
     def imports(self):
         self.copy("license*", dst="licenses", folder=True, ignore_case=True)
-
-
-
-
-
-
-
-    # ###################################################################
-    # Functions Utilities - no need to change
-    # ###################################################################
 
     # Dynamic change of names of CMakePresets.json - avoid name conflicts
     def update_cmake_presets(self, preset_file):
@@ -126,7 +104,17 @@ class ProjectTemplateRecipe(ConanFile):
             with open(preset_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
 
-   # Patch Conan CMake files to remove stdc++ from SYSTEM_LIBS voiding static linking issues
+    # def system_requirements(self):
+        # dnf = package_manager.Dnf(self)
+        # dnf.install("SDL2-devel")
+        # apt = package_manager.Apt(self)
+        # apt.install(["libsdl2-dev"])
+        # yum = package_manager.Yum(self)
+        # yum.install("SDL2-devel")
+        # brew = package_manager.Brew(self)
+        # brew.install("sdl2")
+
+    # Patch Conan CMake files to remove stdc++ from SYSTEM_LIBS voiding static linking issues
     # call it as self.patch_remove_stdcpp_from_system_libs() in generate() or build() method
     def patch_remove_stdcpp_from_system_libs(self):
         """Odstranění stdc++ z SYSTEM_LIBS v generovaných Conan CMake souborech"""
@@ -161,3 +149,9 @@ class ProjectTemplateRecipe(ConanFile):
                     
             except Exception as e:
                 print(f"Warning: Could not patch {cmake_file}: {e}")
+
+    # TO DO 
+    # # ----------------------------------------------------------    
+    # # Creating basic library recipe
+    # # Not recomended due complexity of this project template
+    # # ----------------------------------------------------------
