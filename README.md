@@ -25,6 +25,14 @@ https://digitalspace.name/new/oop3/index2Free.html
 - build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
 
+## Missing dependencies
+
+How to look for required library in Fedora.
+
+```bash
+dnf provides */libGLEW.so.2.2
+```
+
 ## License
 
 MIT License  
