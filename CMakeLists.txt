@@ -1,38 +1,36 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-cmake_policy(SET CMP0048 NEW) # project() command manages VERSION variables
-cmake_policy(SET CMP0076 NEW) # target_sources() command creates usage requirements
-cmake_policy(SET CMP0091 NEW) # MSVC runtime library flags are selected by an abstraction
-
 # MIT License Copyright (c) 2024-2025 Tomáš Mark
 
-# +-+-+-+-+-+-+-+
-# |l|i|b|r|a|r|y|
-# +-+-+-+-+-+-+-+
+# +-+-+-+-+-+-+-+-+-+-+
+# LIBRARY
+# +-+-+-+-+-+-+-+-+-+-+
 
-# === shared libraries
-option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
-# === runtime
-include(cmake/tmplt-runtime.cmake)
-option(USE_STATIC_RUNTIME "Link against static runtime libraries" OFF)
-# === sanitizer
-include(cmake/tmplt-sanitizer.cmake)
-option(SANITIZE_ADDRESS "Enable Address sanitizer" OFF)
-option(SANITIZE_UNDEFINED "Enable Undefined Behavior sanitizer" OFF)
-option(SANITIZE_THREAD "Enable Thread sanitizer" OFF)
-option(SANITIZE_MEMORY "Enable Memory sanitizer" OFF)
-# === hardening
-include(cmake/tmplt-hardening.cmake)
-option(ENABLE_HARDENING "Enable security hardening options" OFF)
-# === ipo
-include(cmake/tmplt-ipo.cmake)
-option(ENABLE_IPO "Enable Interprocedural Optimization" OFF)
-# === ccache
-option(ENABLE_CCACHE "Enable ccache" ON)
+cmake_policy(SET CMP0048 NEW)
+cmake_policy(SET CMP0076 NEW)
+cmake_policy(SET CMP0091 NEW)
+
+option(ENABLE_CCACHE "Use ccache compiler cache" ON)
+option(BUILD_SHARED_LIBS "Build shared (.so) libraries" OFF)
+option(USE_STATIC_RUNTIME "Link C++ runtime statically" ON)
+option(SANITIZE_ADDRESS "Enable address sanitizer" OFF)
+option(SANITIZE_UNDEFINED "Enable undefined behavior sanitizer" OFF)
+option(SANITIZE_THREAD "Enable thread sanitizer" OFF)
+option(SANITIZE_MEMORY "Enable memory sanitizer" OFF)
+option(ENABLE_HARDENING "Enable security hardening" OFF)
+option(ENABLE_IPO "Enable link-time optimization" OFF)
+
+option(ENABLE_GTESTS "Build and run unit tests" ON)
+
 if(ENABLE_CCACHE)
     set(CMAKE_C_COMPILER_LAUNCHER ccache)
     set(CMAKE_CXX_COMPILER_LAUNCHER ccache)
 endif()
+include(cmake/tmplt-runtime.cmake)
+include(cmake/tmplt-sanitizer.cmake)
+include(cmake/tmplt-hardening.cmake)
+include(cmake/tmplt-ipo.cmake)
+include(cmake/tmplt-debug.cmake)
 
 # Linting C/C++ code
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -74,7 +72,13 @@ find_package(glm CONFIG REQUIRED)
 
 # find_package(glew REQUIRED)
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+
+    # set(OPENGL_opengl_LIBRARY "/usr/lib64/libOpenGL.so")
+    # set(OPENGL_glx_LIBRARY "/usr/lib64/libGLX.so")
+
+    find_package(OpenGL REQUIRED MODULE)
     find_package(GLEW REQUIRED)
+
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_image CONFIG REQUIRED)
     find_package(SDL2_ttf CONFIG REQUIRED)
@@ -147,9 +151,17 @@ set(sources ${common_sources} ${platform_sources})
 add_library(${LIBRARY_NAME})
 target_sources(${LIBRARY_NAME} PRIVATE ${headers} ${sources})
 
+# Target-specific statické linkování
+if(USE_STATIC_RUNTIME AND NOT MSVC)
+    target_link_options(${LIBRARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
+    target_compile_options(${LIBRARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
+endif()
+
 apply_ipo(${LIBRARY_NAME})
 apply_hardening(${LIBRARY_NAME})
 apply_sanitizers(${LIBRARY_NAME})
+apply_static_runtime(${LIBRARY_NAME})
+apply_debug_info_control(${LIBRARY_NAME})
 
 # ==============================================================================
 # Set target properties
@@ -211,12 +223,13 @@ target_link_libraries(
     PRIVATE imgui::imgui)
 
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    target_link_libraries(${PROJECT_NAME} PUBLIC GLEW::GLEW)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL2::SDL2main SDL2::SDL2)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL2_image::SDL2_image)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL2_ttf::SDL2_ttf-static)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL2_net::SDL2_net)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL2_mixer::SDL2_mixer)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC OpenGL::GL)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC GLEW::GLEW)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC SDL2::SDL2main SDL2::SDL2)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC SDL2_image::SDL2_image)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC SDL2_ttf::SDL2_ttf-static)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC SDL2_net::SDL2_net)
+    target_link_libraries(${LIBRARY_NAME} PUBLIC SDL2_mixer::SDL2_mixer)
 endif()
 
 # ==============================================================================
