@@ -71,13 +71,14 @@ class ProjectTemplateRecipe(ConanFile):
         self.requires("nlohmann_json/[~3.12]")  # JSON parsing library
         self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
-        self.requires("libpng/1.6.50", override=True)   # PNG image format support  
-        self.requires("libiconv/1.17", override=True)   # Unicode conversion library
 
         if self.settings.os != "Emscripten":
             # if mingw used
             if self.settings.os == "Windows" and self.settings.compiler == "gcc":
+                self.requires("libpng/1.6.50", override=True)
+                self.requires("libiconv/1.17", override=True)
                 self.requires("glew/2.2.0")
+
                 
             self.requires("sdl/2.32.2", override=True)  # Use the latest stable version of SDL
             self.requires("sdl_image/2.8.2")
