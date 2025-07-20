@@ -369,6 +369,10 @@ void PlatformManager::mainLoop () {
     float time = SDL_GetTicks () / 1000.0f; // Get time in seconds
     renderBackground (time);
 
+    // Less performance - sleep for a short time to reduce CPU usage
+    SDL_Delay (32); // Sleep for ~16ms (60 FPS)
+    // SDL_Delay (16); // Sleep for ~16ms (60 FPS)
+
     ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
     SDL_GL_SwapWindow (window_);
   }

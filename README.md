@@ -16,14 +16,14 @@ https://digitalspace.name/new/oop3/index2Free.html
 
 ## ToDo
  
-- ~~scaling ui on the fly with + - keys~~
+- shader fragment convertor
+- shader switcher on the fly (more vertex & fragment shaders builtin)
 - window position (centered, corners, etc.)
 - audio implementation + audio player
-- shader switcher on the fly (more vertex & fragment shaders builtin)
-- shder fragment convertor
 - ImGui theme switcher on the fly (more themes builtin)
 - build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
+- ~~scaling ui on the fly with + - keys~~
 
 ## Missing dependencies
 
