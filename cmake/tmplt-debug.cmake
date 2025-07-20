@@ -31,9 +31,17 @@ function(apply_debug_info_control target)
         if(TARGET_TYPE STREQUAL "EXECUTABLE" AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
             find_program(STRIP_PROGRAM NAMES strip)
             if(STRIP_PROGRAM)
-                add_custom_command(TARGET ${target} POST_BUILD
-                    COMMAND ${STRIP_PROGRAM} --strip-all $<TARGET_FILE:${target}>
-                    COMMENT "Stripping symbols from ${target}")
+                if(APPLE)
+                    # macOS strip command (BSD-based)
+                    add_custom_command(TARGET ${target} POST_BUILD
+                        COMMAND ${STRIP_PROGRAM} -x $<TARGET_FILE:${target}>
+                        COMMENT "Stripping symbols from ${target}")
+                else()
+                    # Linux strip command (GNU binutils)
+                    add_custom_command(TARGET ${target} POST_BUILD
+                        COMMAND ${STRIP_PROGRAM} --strip-all $<TARGET_FILE:${target}>
+                        COMMENT "Stripping symbols from ${target}")
+                endif()
             endif()
         endif()
         
