@@ -52,10 +52,13 @@ function(apply_static_runtime TARGET_NAME)
         # target_link_libraries(${TARGET_NAME} PRIVATE ${ZLIB_LIBRARIES})
 
         # Absolute static linking - enabled by default
-        get_target_property(TARGET_TYPE ${TARGET_NAME} TYPE)
-        if(TARGET_TYPE STREQUAL "EXECUTABLE")
-            set_target_properties(${TARGET_NAME} PROPERTIES LINK_SEARCH_START_STATIC ON
-                                                            LINK_SEARCH_END_STATIC ON)
-        endif()
+
+        # this project uses OpenGL, cannot use -static
+
+        #get_target_property(TARGET_TYPE ${TARGET_NAME} TYPE)
+        #if(TARGET_TYPE STREQUAL "EXECUTABLE")
+        #    set_target_properties(${TARGET_NAME} PROPERTIES LINK_SEARCH_START_STATIC ON
+        #                                                    LINK_SEARCH_END_STATIC ON)
+        #endif()
     endif()
 endfunction()
