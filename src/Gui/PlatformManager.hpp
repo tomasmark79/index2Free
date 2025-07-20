@@ -55,10 +55,9 @@ protected:
   GLuint vao_, vbo_, ebo_, shaderProgram_;
   ImGuiContext* imguiContext_ = nullptr;
   ImGuiIO* io_;
-  
+
   ImGuiStyle defaultStyle_, style_;
-  
-  
+
   const char* glsl_version_ = "#version 130"; // Default GLSL version
 
 public:
