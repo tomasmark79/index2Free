@@ -73,8 +73,8 @@ find_package(glm CONFIG REQUIRED)
 # find_package(glew REQUIRED)
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
 
-    # set(OPENGL_opengl_LIBRARY "/usr/lib64/libOpenGL.so")
-    # set(OPENGL_glx_LIBRARY "/usr/lib64/libGLX.so")
+    # set(OPENGL_opengl_LIBRARY "/usr/lib64/libOpenGL.so") set(OPENGL_glx_LIBRARY
+    # "/usr/lib64/libGLX.so")
 
     find_package(OpenGL REQUIRED MODULE)
     find_package(GLEW REQUIRED)
@@ -173,7 +173,8 @@ target_include_directories(
     ${LIBRARY_NAME}
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    PUBLIC $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
+    PUBLIC $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
+    )
 
 # + stb_image dependencies
 CPMAddPackage(
@@ -209,6 +210,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # ==============================================================================
 # Set linking
 # ==============================================================================
+
+# If CPM.cmake package target is required for just build time, you can use
+# $<BUILD_INTERFACE:...> generator expression to link it only when building the library.
+# target_link_libraries(${LIBRARY_NAME} PRIVATE $<BUILD_INTERFACE:ShaderTranspiler>)
+
 target_link_libraries(
     ${LIBRARY_NAME}
     PUBLIC fmt::fmt

@@ -1,6 +1,7 @@
 /doc/html/
 /doc/latex
 /build/
+/trash/
 /dotnamebackup/
 Solution.log
 CMakeUserPresets.json

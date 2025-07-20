@@ -1,7 +1,13 @@
 #include "PlatformManager.hpp"
+#include "Logger/Logger.hpp"
 #include <memory>
 
 #include "GuiStrings.hpp"
+#include "../Shaders/ShaderConvertor.hpp"
+
+#ifdef __EMSCRIPTEN__
+  #include <emscripten.h>
+#endif
 
 // Static platform instance
 #if defined(__EMSCRIPTEN__)
@@ -13,7 +19,17 @@ static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #endif
 
 #include <Shaders/dyinguniverse/vertex_def.hpp>
-#include <Shaders/dyinguniverse/fragment_def.hpp>
+//#include <Shaders/dyinguniverse/fragment_def.hpp>
+#include <Shaders/Shadertoy/Synthwave.hpp>
+//#include <Shaders/Shadertoy/Glasscube.hpp>
+//#include <Shaders/Shadertoy/Fractaltrees.hpp>
+//#include <Shaders/Shadertoy/Singularity.hpp>
+//#include <Shaders/Shadertoy/Spiralsnake.hpp> // TODO
+//#include <Shaders/Shadertoy/Seascape.hpp>
+//#include <Shaders/Shadertoy/Sunset.hpp>
+//#include <Shaders/Shadertoy/Fireflame.hpp>
+//#include <Shaders/Shadertoy/Happyjumping.hpp>
+
 #include <imgui_internal.h>
 
 // Function to initialize the platform
@@ -96,18 +112,26 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
+  ShaderConvertor convertor;
+  std::string shaderToUse = fragmentShaderToyTemplate;
+
+  // Hardcoded shader sources for different OpenGL versions
 #if defined(IMGUI_IMPL_OPENGL_ES3)
+  LOG_D_MSG ("Using WebGL 2.0 / OpenGL ES 3.0 shader");
   // WebGL 2.0 / OpenGL ES 3.0
-  GLuint vertexShader = compileShader (vertexShader300, GL_VERTEX_SHADER);
-  GLuint fragmentShader = compileShader (fragmentShader300, GL_FRAGMENT_SHADER);
+  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL2);
 #elif defined(IMGUI_IMPL_OPENGL_ES2)
+  LOG_D_MSG ("Using WebGL 1.0 / OpenGL ES 2.0 shader");
   // WebGL 1.0 / OpenGL ES 2.0
-  GLuint vertexShader = compileShader (vertexShader200, GL_VERTEX_SHADER);
-  GLuint fragmentShader = compileShader (fragmentShader200, GL_FRAGMENT_SHADER);
+  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL1);
 #else
+  LOG_D_MSG ("Using Desktop OpenGL shader");
   // Desktop OpenGL
-  GLuint vertexShader = compileShader (vertexShader330, GL_VERTEX_SHADER);
-  GLuint fragmentShader = compileShader (fragmentShader330, GL_FRAGMENT_SHADER);
+  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::Desktop330);
+
+  GLuint vertexShader = compileShader (result.vertexShader.c_str (), GL_VERTEX_SHADER);
+  GLuint fragmentShader = compileShader (result.fragmentShader.c_str (), GL_FRAGMENT_SHADER);
+
 #endif
 
   if (vertexShader == 0) {
@@ -131,7 +155,15 @@ void PlatformManager::setupShaders () {
   GLint success;
   glGetProgramiv (shaderProgram_, GL_LINK_STATUS, &success);
   if (!success) {
-    handleError ("Failed to link shader program");
+    GLint logLength;
+    glGetProgramiv (shaderProgram_, GL_INFO_LOG_LENGTH, &logLength);
+    std::vector<char> infoLog (logLength);
+    glGetProgramInfoLog (shaderProgram_, logLength, nullptr, infoLog.data ());
+
+    handleError ("Failed to link shader program", infoLog.data ());
+    // 🚨 IMPORTANT: Don't return here - set shaderProgram_ to 0!
+    shaderProgram_ = 0;
+    return;
   }
 
   // Clean up shaders after linking
@@ -157,10 +189,41 @@ GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderTy
     glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<char> infoLog (logLength);
     glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
+
+    // 🔍 DEBUG: Output shader source and error for debugging
+    const char* shaderTypeName = (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
+    LOG_E_FMT ("=== %s SHADER COMPILATION ERROR ===", shaderTypeName);
+    LOG_E_FMT ("Error: %s", infoLog.data ());
+    LOG_E_FMT ("=== %s SHADER SOURCE ===", shaderTypeName);
+    LOG_E_FMT ("%s", shaderSource);
+    LOG_E_MSG ("=== END SHADER SOURCE ===");
+
+#ifdef __EMSCRIPTEN__
+    EM_ASM (
+        {
+          console.error ("🚨 [SHADER ERROR] " + UTF8ToString ($0) + " shader compilation FAILED!",
+                         $0);
+          console.error ("🚨 [SHADER ERROR] Error: " + UTF8ToString ($1), $1);
+          console.log ("📝 [SHADER SOURCE] " + UTF8ToString ($2), $2);
+        },
+        shaderTypeName, infoLog.data (), shaderSource);
+#endif
+
     handleError ("Failed to compile shader", infoLog.data ());
     glDeleteShader (shader);
     return 0;
   }
+
+#ifdef __EMSCRIPTEN__
+  const char* shaderTypeName = (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
+  EM_ASM (
+      {
+        console.log ("✅ [SHADER OK] " + UTF8ToString ($0)
+                     + " shader compiled successfully ID: " + $1);
+      },
+      shaderTypeName, shader);
+#endif
+
   return shader;
 }
 
@@ -365,13 +428,14 @@ void PlatformManager::mainLoop () {
     glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Render background shader
-    float time = SDL_GetTicks () / 1000.0f; // Get time in seconds
-    renderBackground (time);
-
-    // Less performance - sleep for a short time to reduce CPU usage
-    SDL_Delay (32); // Sleep for ~16ms (60 FPS)
-    // SDL_Delay (16); // Sleep for ~16ms (60 FPS)
+    // Render background shader - cumulative time
+    static float totalTime = 0.0f;
+    static unsigned int lastTime = SDL_GetTicks ();
+    unsigned int currentTime = SDL_GetTicks ();
+    float deltaTime = (currentTime - lastTime) / 1000.0f;
+    totalTime += deltaTime;
+    lastTime = currentTime;
+    renderBackground (totalTime); // Pass cumulative time, not delta
 
     ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
     SDL_GL_SwapWindow (window_);
@@ -406,7 +470,12 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
 }
 
 // Render the background using the shader program
-void PlatformManager::renderBackground (float deltaTime) {
+void PlatformManager::renderBackground (float totalTime) {
+  // ⚡ PERFORMANCE: Rychlá kontrola validity shader programu bez debug výpisů
+  if (shaderProgram_ == 0) {
+    return; // Shader program není dostupný
+  }
+
   GLboolean depthTestEnabled;
   glGetBooleanv (GL_DEPTH_TEST, &depthTestEnabled);
   glDisable (GL_DEPTH_TEST);
@@ -425,20 +494,38 @@ void PlatformManager::renderBackground (float deltaTime) {
   glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof (float), (void*)0);
 #endif
 
+  // uniform vec3      iResolution;           // viewport resolution (in pixels)
+  // uniform float     iTime;                 // shader playback time (in seconds)
+  // uniform float     iTimeDelta;            // render time (in seconds)
+  // uniform float     iFrameRate;            // shader frame rate
+  // uniform int       iFrame;                // shader playback frame
+  // uniform float     iChannelTime[4];       // channel playback time (in seconds)
+  // uniform vec3      iChannelResolution[4]; // channel resolution (in pixels)
+  // uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
+  // uniform samplerXX iChannel0..3;          // input channel. XX = 2D/Cube
+  // uniform vec4      iDate;                 // (year, month, day, time in seconds)
+
   GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
   GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
   GLint iTimeDeltaLoc = glGetUniformLocation (shaderProgram_, "iTimeDelta");
   GLint iFrameLoc = glGetUniformLocation (shaderProgram_, "iFrame");
   GLint iMouseLoc = glGetUniformLocation (shaderProgram_, "iMouse");
 
+  // ⚡ PERFORMANCE: Statické proměnné pro frame counter
+  static int frameCount = 0;
+  static float lastDeltaTime = 0.016f; // Default 60 FPS
+  frameCount++;
+
   if (iResolutionLoc != -1)
     glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
-  if (iTimeLoc != -1)
-    glUniform1f (iTimeLoc, deltaTime);
+  if (iTimeLoc != -1) {
+    glUniform1f (iTimeLoc, totalTime); // Dynamický čas pro animace
+    // glUniform1f (iTimeLoc, 5.0f); // ⚡ STATIC TIME: Completely frozen time for testing
+  }
   if (iTimeDeltaLoc != -1)
-    glUniform1f (iTimeDeltaLoc, 0.016f);
+    glUniform1f (iTimeDeltaLoc, lastDeltaTime);
   if (iFrameLoc != -1)
-    glUniform1i (iFrameLoc, (int)(deltaTime * 60.0f));
+    glUniform1i (iFrameLoc, frameCount);
   if (iMouseLoc != -1)
     glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
 

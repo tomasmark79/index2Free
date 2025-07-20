@@ -23,6 +23,7 @@
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 
+#define DEFAULT_FPS_ 60
 #define DEFAULT_WINDOW_WIDTH 1920
 #define DEFAULT_WINDOW_HEIGHT 1080
 #define DEFAULT_SCALING_FACTOR_DESKTOP (float)2.0f

@@ -23,13 +23,13 @@ bool InputHandler::processEvent (const SDL_Event& event) {
   switch (event.type) {
   case SDL_KEYDOWN:
     processKeyboardInput (const_cast<SDL_Event&> (event));
-    LOG_D_STREAM << "InputHandler::processEvent: Key down event for key: " << SDL_GetKeyName (key)
-                 << std::endl;
+    // LOG_D_STREAM << "InputHandler::processEvent: Key down event for key: " << SDL_GetKeyName (key)
+    //              << std::endl;
     break;
   case SDL_WINDOWEVENT:
     processWindowEvent (const_cast<SDL_Event&> (event));
-    LOG_D_STREAM << "InputHandler::processEvent: Window event type: "
-                 << static_cast<int> (event.window.event) << std::endl;
+    // LOG_D_STREAM << "InputHandler::processEvent: Window event type: "
+    //              << static_cast<int> (event.window.event) << std::endl;
     break;
   default:
     // Handle other event types if necessary
