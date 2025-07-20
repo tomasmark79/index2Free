@@ -18,9 +18,12 @@ static std::unique_ptr<EmscriptenPlatform> gPlatform = nullptr;
 static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #endif
 
+bool showDemo = false;
+bool showOverlay = true;
+
 #include <Shaders/dyinguniverse/vertex_def.hpp>
 //#include <Shaders/dyinguniverse/fragment_def.hpp>
-#include <Shaders/Shadertoy/Synthwave.hpp>
+//#include <Shaders/Shadertoy/Synthwave.hpp>
 //#include <Shaders/Shadertoy/Glasscube.hpp>
 //#include <Shaders/Shadertoy/Fractaltrees.hpp>
 //#include <Shaders/Shadertoy/Singularity.hpp>
@@ -29,6 +32,7 @@ static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 //#include <Shaders/Shadertoy/Sunset.hpp>
 //#include <Shaders/Shadertoy/Fireflame.hpp>
 //#include <Shaders/Shadertoy/Happyjumping.hpp>
+#include <Shaders/Shadertoy/Tunnel.hpp>
 
 #include <imgui_internal.h>
 
@@ -289,73 +293,71 @@ void PlatformManager::initializeImGui () {
 
   defaultStyle_ = ImGui::GetStyle ();
   style_ = ImGui::GetStyle ();
-  applyStyleLila (style_);
+  applyStyleLila (style_, DEFAULT_WINDOW_OPACITY); // Apply the Lila style with full opacity
 }
 
 // Apply the Lila style to ImGui
-void PlatformManager::applyStyleLila (ImGuiStyle& style) {
-
+void PlatformManager::applyStyleLila (ImGuiStyle& style, float alpha) {
   ImVec4* colors = style.Colors;
 
-  style.WindowRounding = 8.0f; // Větší zaoblení pro futuristický look
+  style.WindowRounding = 8.0f;
   style.FrameRounding = 6.0f;
   style.GrabRounding = 6.0f;
   style.ScrollbarRounding = 6.0f;
-  style.FrameBorderSize = 1.5f; // Tlustší okraje pro neonový efekt
+  style.FrameBorderSize = 1.5f;
   style.WindowBorderSize = 2.0f;
-  style.WindowPadding = ImVec2 (12.0f, 12.0f); // Větší padding
+  style.WindowPadding = ImVec2 (12.0f, 12.0f);
   style.FramePadding = ImVec2 (8.0f, 4.0f);
 
   // Tmavý futuristický theme - FIALOVÁ PALETA
-  colors[ImGuiCol_Text]
-      = ImVec4 (0.95f, 0.90f, 1.00f, 1.00f); // Bílý text s lehkým fialovým nádechem
-  colors[ImGuiCol_TextDisabled] = ImVec4 (0.50f, 0.40f, 0.60f, 0.80f); // Šedo-fialový disabled text
-  colors[ImGuiCol_WindowBg] = ImVec4 (0.08f, 0.05f, 0.15f, 0.94f);     // Tmavě fialová
-  colors[ImGuiCol_ChildBg] = ImVec4 (0.06f, 0.03f, 0.12f, 0.90f);      // Ještě tmavší fialová
-  colors[ImGuiCol_PopupBg] = ImVec4 (0.12f, 0.08f, 0.20f, 0.95f);      // Popup pozadí - fialová
-  colors[ImGuiCol_Border] = ImVec4 (0.60f, 0.20f, 1.00f, 0.80f);       // Jasná fialová okraj
-  colors[ImGuiCol_BorderShadow] = ImVec4 (0.30f, 0.10f, 0.60f, 0.50f); // Tmavší fialový stín
-  colors[ImGuiCol_FrameBg] = ImVec4 (0.12f, 0.08f, 0.20f, 0.80f);
-  colors[ImGuiCol_FrameBgHovered] = ImVec4 (0.40f, 0.15f, 0.70f, 0.50f); // Střední fialová hover
-  colors[ImGuiCol_FrameBgActive] = ImVec4 (0.60f, 0.30f, 1.00f, 0.70f);  // Jasná fialová active
-  colors[ImGuiCol_TitleBg] = ImVec4 (0.25f, 0.10f, 0.50f, 0.90f);
-  colors[ImGuiCol_TitleBgActive] = ImVec4 (0.45f, 0.20f, 0.80f, 0.95f);
-  colors[ImGuiCol_TitleBgCollapsed] = ImVec4 (0.15f, 0.05f, 0.35f, 0.80f);
-  colors[ImGuiCol_MenuBarBg] = ImVec4 (0.10f, 0.05f, 0.18f, 0.90f);
-  colors[ImGuiCol_ScrollbarBg] = ImVec4 (0.06f, 0.03f, 0.12f, 0.70f);
-  colors[ImGuiCol_ScrollbarGrab] = ImVec4 (0.50f, 0.20f, 0.80f, 0.60f);
-  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f);
-  colors[ImGuiCol_ScrollbarGrabActive] = ImVec4 (0.70f, 0.40f, 1.00f, 1.00f);
-  colors[ImGuiCol_CheckMark] = ImVec4 (0.80f, 0.40f, 1.00f, 1.00f); // Světle fialová
-  colors[ImGuiCol_SliderGrab] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f);
-  colors[ImGuiCol_SliderGrabActive] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f);
-  colors[ImGuiCol_Button] = ImVec4 (0.20f, 0.10f, 0.35f, 0.80f);
-  colors[ImGuiCol_ButtonHovered] = ImVec4 (0.45f, 0.20f, 0.75f, 0.80f); // Střední fialová hover
-  colors[ImGuiCol_ButtonActive] = ImVec4 (0.65f, 0.35f, 1.00f, 0.90f);  // Jasná fialová active
-  colors[ImGuiCol_Header] = ImVec4 (0.35f, 0.15f, 0.65f, 0.70f);
-  colors[ImGuiCol_HeaderHovered] = ImVec4 (0.50f, 0.25f, 0.80f, 0.80f);
-  colors[ImGuiCol_HeaderActive] = ImVec4 (0.70f, 0.40f, 1.00f, 0.90f);
-  colors[ImGuiCol_Separator] = ImVec4 (0.45f, 0.20f, 0.75f, 0.60f);
-  colors[ImGuiCol_SeparatorHovered] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f);
-  colors[ImGuiCol_SeparatorActive] = ImVec4 (0.75f, 0.45f, 1.00f, 1.00f);
-  colors[ImGuiCol_ResizeGrip] = ImVec4 (0.55f, 0.25f, 0.85f, 0.60f);
-  colors[ImGuiCol_ResizeGripHovered] = ImVec4 (0.65f, 0.35f, 0.95f, 0.80f);
-  colors[ImGuiCol_ResizeGripActive] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f);
-  colors[ImGuiCol_Tab] = ImVec4 (0.25f, 0.10f, 0.45f, 0.70f);
-  colors[ImGuiCol_TabHovered] = ImVec4 (0.50f, 0.25f, 0.80f, 0.80f);
-  colors[ImGuiCol_TabActive] = ImVec4 (0.65f, 0.35f, 0.95f, 0.90f);
-  colors[ImGuiCol_TabUnfocused] = ImVec4 (0.15f, 0.05f, 0.30f, 0.60f);
-  colors[ImGuiCol_TabUnfocusedActive] = ImVec4 (0.35f, 0.15f, 0.60f, 0.70f);
-  colors[ImGuiCol_PlotLines] = ImVec4 (0.70f, 0.30f, 1.00f, 1.00f); // Světle fialová
-  colors[ImGuiCol_PlotLinesHovered] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f);
-  colors[ImGuiCol_PlotHistogram] = ImVec4 (0.60f, 0.20f, 0.90f, 1.00f); // Střední fialová
-  colors[ImGuiCol_PlotHistogramHovered] = ImVec4 (0.75f, 0.40f, 1.00f, 1.00f);
-  colors[ImGuiCol_TextSelectedBg] = ImVec4 (0.60f, 0.30f, 0.90f, 0.35f);
-  colors[ImGuiCol_DragDropTarget] = ImVec4 (0.75f, 0.40f, 1.00f, 0.80f);
-  colors[ImGuiCol_NavHighlight] = ImVec4 (0.65f, 0.30f, 1.00f, 0.80f);
-  colors[ImGuiCol_NavWindowingHighlight] = ImVec4 (0.90f, 0.80f, 1.00f, 0.70f);
-  colors[ImGuiCol_NavWindowingDimBg] = ImVec4 (0.20f, 0.10f, 0.40f, 0.20f);
-  colors[ImGuiCol_ModalWindowDimBg] = ImVec4 (0.05f, 0.02f, 0.12f, 0.60f);
+  colors[ImGuiCol_Text] = ImVec4 (0.95f, 0.90f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_TextDisabled] = ImVec4 (0.50f, 0.40f, 0.60f, 0.80f * alpha);
+  colors[ImGuiCol_WindowBg] = ImVec4 (0.08f, 0.05f, 0.15f, 0.70f * alpha);
+  colors[ImGuiCol_ChildBg] = ImVec4 (0.06f, 0.03f, 0.12f, 0.60f * alpha);
+  colors[ImGuiCol_PopupBg] = ImVec4 (0.12f, 0.08f, 0.20f, 0.80f * alpha);
+  colors[ImGuiCol_Border] = ImVec4 (0.60f, 0.20f, 1.00f, 0.80f * alpha);
+  colors[ImGuiCol_BorderShadow] = ImVec4 (0.30f, 0.10f, 0.60f, 0.50f * alpha);
+  colors[ImGuiCol_FrameBg] = ImVec4 (0.12f, 0.08f, 0.20f, 0.80f * alpha);
+  colors[ImGuiCol_FrameBgHovered] = ImVec4 (0.40f, 0.15f, 0.70f, 0.50f * alpha);
+  colors[ImGuiCol_FrameBgActive] = ImVec4 (0.60f, 0.30f, 1.00f, 0.70f * alpha);
+  colors[ImGuiCol_TitleBg] = ImVec4 (0.25f, 0.10f, 0.50f, 0.70f * alpha);
+  colors[ImGuiCol_TitleBgActive] = ImVec4 (0.45f, 0.20f, 0.80f, 0.80f * alpha);
+  colors[ImGuiCol_TitleBgCollapsed] = ImVec4 (0.15f, 0.05f, 0.35f, 0.60f * alpha);
+  colors[ImGuiCol_MenuBarBg] = ImVec4 (0.10f, 0.05f, 0.18f, 0.70f * alpha);
+  colors[ImGuiCol_ScrollbarBg] = ImVec4 (0.06f, 0.03f, 0.12f, 0.50f * alpha);
+  colors[ImGuiCol_ScrollbarGrab] = ImVec4 (0.50f, 0.20f, 0.80f, 0.60f * alpha);
+  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f * alpha);
+  colors[ImGuiCol_ScrollbarGrabActive] = ImVec4 (0.70f, 0.40f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_CheckMark] = ImVec4 (0.80f, 0.40f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_SliderGrab] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f * alpha);
+  colors[ImGuiCol_SliderGrabActive] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_Button] = ImVec4 (0.20f, 0.10f, 0.35f, 0.80f * alpha);
+  colors[ImGuiCol_ButtonHovered] = ImVec4 (0.45f, 0.20f, 0.75f, 0.80f * alpha);
+  colors[ImGuiCol_ButtonActive] = ImVec4 (0.65f, 0.35f, 1.00f, 0.90f * alpha);
+  colors[ImGuiCol_Header] = ImVec4 (0.35f, 0.15f, 0.65f, 0.70f * alpha);
+  colors[ImGuiCol_HeaderHovered] = ImVec4 (0.50f, 0.25f, 0.80f, 0.80f * alpha);
+  colors[ImGuiCol_HeaderActive] = ImVec4 (0.70f, 0.40f, 1.00f, 0.90f * alpha);
+  colors[ImGuiCol_Separator] = ImVec4 (0.45f, 0.20f, 0.75f, 0.60f * alpha);
+  colors[ImGuiCol_SeparatorHovered] = ImVec4 (0.60f, 0.30f, 0.90f, 0.80f * alpha);
+  colors[ImGuiCol_SeparatorActive] = ImVec4 (0.75f, 0.45f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_ResizeGrip] = ImVec4 (0.55f, 0.25f, 0.85f, 0.60f * alpha);
+  colors[ImGuiCol_ResizeGripHovered] = ImVec4 (0.65f, 0.35f, 0.95f, 0.80f * alpha);
+  colors[ImGuiCol_ResizeGripActive] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_Tab] = ImVec4 (0.25f, 0.10f, 0.45f, 0.70f * alpha);
+  colors[ImGuiCol_TabHovered] = ImVec4 (0.50f, 0.25f, 0.80f, 0.80f * alpha);
+  colors[ImGuiCol_TabActive] = ImVec4 (0.65f, 0.35f, 0.95f, 0.90f * alpha);
+  colors[ImGuiCol_TabUnfocused] = ImVec4 (0.15f, 0.05f, 0.30f, 0.60f * alpha);
+  colors[ImGuiCol_TabUnfocusedActive] = ImVec4 (0.35f, 0.15f, 0.60f, 0.70f * alpha);
+  colors[ImGuiCol_PlotLines] = ImVec4 (0.70f, 0.30f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_PlotLinesHovered] = ImVec4 (0.80f, 0.50f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_PlotHistogram] = ImVec4 (0.60f, 0.20f, 0.90f, 1.00f * alpha);
+  colors[ImGuiCol_PlotHistogramHovered] = ImVec4 (0.75f, 0.40f, 1.00f, 1.00f * alpha);
+  colors[ImGuiCol_TextSelectedBg] = ImVec4 (0.60f, 0.30f, 0.90f, 0.35f * alpha);
+  colors[ImGuiCol_DragDropTarget] = ImVec4 (0.75f, 0.40f, 1.00f, 0.80f * alpha);
+  colors[ImGuiCol_NavHighlight] = ImVec4 (0.65f, 0.30f, 1.00f, 0.80f * alpha);
+  colors[ImGuiCol_NavWindowingHighlight] = ImVec4 (0.90f, 0.80f, 1.00f, 0.70f * alpha);
+  colors[ImGuiCol_NavWindowingDimBg] = ImVec4 (0.20f, 0.10f, 0.40f, 0.20f * alpha);
+  colors[ImGuiCol_ModalWindowDimBg] = ImVec4 (0.05f, 0.02f, 0.12f, 0.40f * alpha);
 }
 
 // Main loop for the platform
@@ -386,11 +388,9 @@ void PlatformManager::mainLoop () {
     ImGui_ImplSDL2_NewFrame ();
     ImGui::NewFrame ();
 
-    bool showDemo = true;
     if (showDemo)
       ImGui::ShowDemoWindow (&showDemo);
 
-    bool showOverlay = true;
     if (showOverlay) {
       printOverlayWindow ();
     }
@@ -439,7 +439,7 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
   ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
 
   // At least apply the style to the current ImGui context
-  applyStyleLila (ImGui::GetStyle ());
+  applyStyleLila (ImGui::GetStyle (), DEFAULT_WINDOW_OPACITY); // Full opacity for the style
 }
 
 // Render the background using the shader program

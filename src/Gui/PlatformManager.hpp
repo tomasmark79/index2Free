@@ -23,6 +23,7 @@
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 
+#define DEFAULT_WINDOW_OPACITY (float)0.95f
 #define DEFAULT_MIN_ZOOM (float)0.35f
 #define DEFAULT_MAX_ZOOM (float)5.0f
 #define DEFAULT_FPS_ 60
@@ -78,7 +79,7 @@ protected:
   void decideOpenGLVersion ();
   void setupQuad ();
   void initializeImGui ();
-  void applyStyleLila (ImGuiStyle& style);
+  void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
   void mainLoop ();
   void scaleImGui (float userScaleFactor = 1.0f);
   void renderBackground (float deltaTime);
