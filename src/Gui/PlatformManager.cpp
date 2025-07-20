@@ -508,8 +508,16 @@ void PlatformManager::renderBackground (float totalTime) {
   GLint iResolutionLoc = glGetUniformLocation (shaderProgram_, "iResolution");
   GLint iTimeLoc = glGetUniformLocation (shaderProgram_, "iTime");
   GLint iTimeDeltaLoc = glGetUniformLocation (shaderProgram_, "iTimeDelta");
+  GLint iFrameRateLoc = glGetUniformLocation (shaderProgram_, "iFrameRate");
   GLint iFrameLoc = glGetUniformLocation (shaderProgram_, "iFrame");
+  GLint iChannelTimeLoc = glGetUniformLocation (shaderProgram_, "iChannelTime");
+  GLint iChannelResolutionLoc = glGetUniformLocation (shaderProgram_, "iChannelResolution");
   GLint iMouseLoc = glGetUniformLocation (shaderProgram_, "iMouse");
+  GLint iDateLoc = glGetUniformLocation (shaderProgram_, "iDate");
+  GLint iChannel0Loc = glGetUniformLocation (shaderProgram_, "iChannel0");
+  GLint iChannel1Loc = glGetUniformLocation (shaderProgram_, "iChannel1");
+  GLint iChannel2Loc = glGetUniformLocation (shaderProgram_, "iChannel2");
+  GLint iChannel3Loc = glGetUniformLocation (shaderProgram_, "iChannel3");
 
   // ⚡ PERFORMANCE: Statické proměnné pro frame counter
   static int frameCount = 0;
@@ -518,6 +526,44 @@ void PlatformManager::renderBackground (float totalTime) {
 
   if (iResolutionLoc != -1)
     glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
+  if (iTimeLoc != -1)
+    glUniform1f (iTimeLoc, totalTime);
+  if (iTimeDeltaLoc != -1)
+    glUniform1f (iTimeDeltaLoc, lastDeltaTime);
+  if (iFrameRateLoc != -1)
+    glUniform1f (iFrameRateLoc, ImGui::GetIO ().Framerate);
+  if (iFrameLoc != -1)
+    glUniform1i (iFrameLoc, frameCount);
+  // iChannelTime[4]
+  if (iChannelTimeLoc != -1) {
+    float channelTime[4] = { totalTime, totalTime, totalTime, totalTime };
+    glUniform1fv (iChannelTimeLoc, 4, channelTime);
+  }
+  // iChannelResolution[4]
+  if (iChannelResolutionLoc != -1) {
+    float channelRes[12] = {
+      (float)windowWidth_, (float)windowHeight_, 1.0f,
+      (float)windowWidth_, (float)windowHeight_, 1.0f,
+      (float)windowWidth_, (float)windowHeight_, 1.0f,
+      (float)windowWidth_, (float)windowHeight_, 1.0f
+    };
+    glUniform3fv (iChannelResolutionLoc, 4, channelRes);
+  }
+  // iMouse
+  if (iMouseLoc != -1)
+    glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f); // TODO: real mouse coords
+  // iDate
+  if (iDateLoc != -1) {
+    time_t now = time (nullptr);
+    struct tm* t = localtime (&now);
+    float seconds = (float)t->tm_hour * 3600.0f + (float)t->tm_min * 60.0f + (float)t->tm_sec;
+    glUniform4f (iDateLoc, (float)(1900 + t->tm_year), (float)(1 + t->tm_mon), (float)t->tm_mday, seconds);
+  }
+  // iChannel0..3 (sampler2D/samplerCube) - demo: bind 0
+  if (iChannel0Loc != -1) glUniform1i (iChannel0Loc, 0);
+  if (iChannel1Loc != -1) glUniform1i (iChannel1Loc, 0);
+  if (iChannel2Loc != -1) glUniform1i (iChannel2Loc, 0);
+  if (iChannel3Loc != -1) glUniform1i (iChannel3Loc, 0);
   if (iTimeLoc != -1) {
     glUniform1f (iTimeLoc, totalTime); // Dynamický čas pro animace
     // glUniform1f (iTimeLoc, 5.0f); // ⚡ STATIC TIME: Completely frozen time for testing
