@@ -1,7 +1,7 @@
 #ifndef __SYNTHWAVE_H__
 #define __SYNTHWAVE_H__
 
-const char* fragmentShaderToyTemplate = R"(               
+const char* fragmentShaderToyTemplate = R"(
 float sun(vec2 uv, float battery)
 {
  	float val = smoothstep(0.3, 0.29, length(uv));
@@ -156,6 +156,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         fragColor = vec4(col,1.0);
     }
     //else fragColor = vec4(0.0);
+
+    
 }
 )";
 

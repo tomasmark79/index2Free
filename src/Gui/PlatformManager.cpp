@@ -119,22 +119,21 @@ void PlatformManager::setupShaders () {
 
   // Hardcoded shader sources for different OpenGL versions
 #if defined(IMGUI_IMPL_OPENGL_ES3)
-  LOG_D_MSG ("Using WebGL 2.0 / OpenGL ES 3.0 shader");
+  LOG_I_STREAM << "Using WebGL 2.0 / OpenGL ES 3.0 shader" << std::endl;
   // WebGL 2.0 / OpenGL ES 3.0
   auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL2);
 #elif defined(IMGUI_IMPL_OPENGL_ES2)
-  LOG_D_MSG ("Using WebGL 1.0 / OpenGL ES 2.0 shader");
+  LOG_I_STREAM << "Using WebGL 1.0 / OpenGL ES 2.0 shader" << std::endl;
   // WebGL 1.0 / OpenGL ES 2.0
   auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL1);
 #else
-  LOG_D_MSG ("Using Desktop OpenGL shader");
+  LOG_I_STREAM << "Using Desktop OpenGL shader" << std::endl;
   // Desktop OpenGL
   auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::Desktop330);
+#endif
 
   GLuint vertexShader = compileShader (result.vertexShader.c_str (), GL_VERTEX_SHADER);
   GLuint fragmentShader = compileShader (result.fragmentShader.c_str (), GL_FRAGMENT_SHADER);
-
-#endif
 
   if (vertexShader == 0) {
     handleError ("Failed to compile vertex shader");
@@ -173,8 +172,7 @@ void PlatformManager::setupShaders () {
   glDeleteShader (fragmentShader);
 }
 
-// Compile shader from source code
-// Returns the shader ID or 0 on failure
+// Compile shader from source code - Returns the shader ID or 0 on failure
 GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderType) {
   GLuint shader = glCreateShader (shaderType);
   if (shader == 0) {
@@ -191,41 +189,10 @@ GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderTy
     glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<char> infoLog (logLength);
     glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
-
-    // 🔍 DEBUG: Output shader source and error for debugging
-    const char* shaderTypeName = (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
-    LOG_E_FMT ("=== %s SHADER COMPILATION ERROR ===", shaderTypeName);
-    LOG_E_FMT ("Error: %s", infoLog.data ());
-    LOG_E_FMT ("=== %s SHADER SOURCE ===", shaderTypeName);
-    LOG_E_FMT ("%s", shaderSource);
-    LOG_E_MSG ("=== END SHADER SOURCE ===");
-
-#ifdef __EMSCRIPTEN__
-    EM_ASM (
-        {
-          console.error ("🚨 [SHADER ERROR] " + UTF8ToString ($0) + " shader compilation FAILED!",
-                         $0);
-          console.error ("🚨 [SHADER ERROR] Error: " + UTF8ToString ($1), $1);
-          console.log ("📝 [SHADER SOURCE] " + UTF8ToString ($2), $2);
-        },
-        shaderTypeName, infoLog.data (), shaderSource);
-#endif
-
     handleError ("Failed to compile shader", infoLog.data ());
     glDeleteShader (shader);
     return 0;
   }
-
-#ifdef __EMSCRIPTEN__
-  const char* shaderTypeName = (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
-  EM_ASM (
-      {
-        console.log ("✅ [SHADER OK] " + UTF8ToString ($0)
-                     + " shader compiled successfully ID: " + $1);
-      },
-      shaderTypeName, shader);
-#endif
-
   return shader;
 }
 
@@ -394,6 +361,10 @@ void PlatformManager::applyStyleLila (ImGuiStyle& style) {
 // Main loop for the platform
 void PlatformManager::mainLoop () {
   bool done = false;
+
+  // #ifdef __EMSCRIPTEN__
+  //   emscripten_set_main_loop_timing (EM_TIMING_RAF, 0);
+  // #endif
 
   SDL_Event event;
   while (!done) {
@@ -637,8 +608,9 @@ void PlatformManager::printOverlayWindow () {
 void PlatformManager::initInputHandlerCallbacks () {
   inputHandler.setScaleCallback ([&] (float scaleFactor) {
     this->userScaleFactor += scaleFactor;
-    this->userScaleFactor = std::max (0.1f, this->userScaleFactor);
-    this->scaleImGui (userScaleFactor);
+    this->userScaleFactor = std::max (DEFAULT_MIN_ZOOM, this->userScaleFactor);
+    this->userScaleFactor = std::min (DEFAULT_MAX_ZOOM, this->userScaleFactor);
+    this->scaleImGui (this->userScaleFactor);
   });
 
   inputHandler.setActionCallback (InputAction::ToggleFullscreen, [this] () { /*toggleFullscreen ()*/

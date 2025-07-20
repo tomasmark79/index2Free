@@ -45,6 +45,7 @@ struct EmscriptenDisplayInfo {
 };
 
 void EmscriptenPlatform::initialize () {
+  const bool isInfiniteLoop = true; // Emscripten main loop runs indefinitely
   createSDL2Window ("Emscripten SDL2 Window", windowWidth_, windowHeight_);
   createOpenGLContext (1);
   setupQuad ();
@@ -58,7 +59,7 @@ void EmscriptenPlatform::initialize () {
         EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
         platform->mainLoop ();
       },
-      this, 0, 1);
+      this, 0, isInfiniteLoop);
 }
 
 void EmscriptenPlatform::updateWindowSize () {

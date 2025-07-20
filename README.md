@@ -16,7 +16,9 @@ https://digitalspace.name/new/oop3/index2Free.html
 
 ## ToDo
  
-- shader fragment convertor
+- shader fragment convertor 90% done
+  - needed fix for some complex shaders
+
 - shader switcher on the fly (more vertex & fragment shaders builtin)
 - window position (centered, corners, etc.)
 - audio implementation + audio player

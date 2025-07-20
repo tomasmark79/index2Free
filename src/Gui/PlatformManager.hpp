@@ -23,6 +23,8 @@
 // #include <glm/glm.hpp>
 // #include <glm/gtc/matrix_transform.hpp>
 
+#define DEFAULT_MIN_ZOOM (float)0.35f
+#define DEFAULT_MAX_ZOOM (float)5.0f
 #define DEFAULT_FPS_ 60
 #define DEFAULT_WINDOW_WIDTH 1920
 #define DEFAULT_WINDOW_HEIGHT 1080

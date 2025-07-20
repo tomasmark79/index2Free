@@ -38,6 +38,8 @@ bool InputHandler::processEvent (const SDL_Event& event) {
   return (event.type == SDL_QUIT);
 }
 
+// TODO: Q as Quit App
+
 // Process keyboard input events
 void InputHandler::processKeyboardInput (const SDL_Event& event) {
   const SDL_Keycode key = event.key.keysym.sym;
