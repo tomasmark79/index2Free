@@ -113,6 +113,8 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   ShaderConvertor convertor;
+
+  // Use hardcoded shader source for testing
   std::string shaderToUse = fragmentShaderToyTemplate;
 
   // Hardcoded shader sources for different OpenGL versions
@@ -161,7 +163,7 @@ void PlatformManager::setupShaders () {
     glGetProgramInfoLog (shaderProgram_, logLength, nullptr, infoLog.data ());
 
     handleError ("Failed to link shader program", infoLog.data ());
-    // 🚨 IMPORTANT: Don't return here - set shaderProgram_ to 0!
+    // IMPORTANT: Don't return here - set shaderProgram_ to 0!
     shaderProgram_ = 0;
     return;
   }
@@ -471,9 +473,8 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
 
 // Render the background using the shader program
 void PlatformManager::renderBackground (float totalTime) {
-  // ⚡ PERFORMANCE: Rychlá kontrola validity shader programu bez debug výpisů
   if (shaderProgram_ == 0) {
-    return; // Shader program není dostupný
+    return; // No shader program available
   }
 
   GLboolean depthTestEnabled;
@@ -541,12 +542,10 @@ void PlatformManager::renderBackground (float totalTime) {
   }
   // iChannelResolution[4]
   if (iChannelResolutionLoc != -1) {
-    float channelRes[12] = {
-      (float)windowWidth_, (float)windowHeight_, 1.0f,
-      (float)windowWidth_, (float)windowHeight_, 1.0f,
-      (float)windowWidth_, (float)windowHeight_, 1.0f,
-      (float)windowWidth_, (float)windowHeight_, 1.0f
-    };
+    float channelRes[12] = { (float)windowWidth_, (float)windowHeight_, 1.0f,
+                             (float)windowWidth_, (float)windowHeight_, 1.0f,
+                             (float)windowWidth_, (float)windowHeight_, 1.0f,
+                             (float)windowWidth_, (float)windowHeight_, 1.0f };
     glUniform3fv (iChannelResolutionLoc, 4, channelRes);
   }
   // iMouse
@@ -557,13 +556,18 @@ void PlatformManager::renderBackground (float totalTime) {
     time_t now = time (nullptr);
     struct tm* t = localtime (&now);
     float seconds = (float)t->tm_hour * 3600.0f + (float)t->tm_min * 60.0f + (float)t->tm_sec;
-    glUniform4f (iDateLoc, (float)(1900 + t->tm_year), (float)(1 + t->tm_mon), (float)t->tm_mday, seconds);
+    glUniform4f (iDateLoc, (float)(1900 + t->tm_year), (float)(1 + t->tm_mon), (float)t->tm_mday,
+                 seconds);
   }
   // iChannel0..3 (sampler2D/samplerCube) - demo: bind 0
-  if (iChannel0Loc != -1) glUniform1i (iChannel0Loc, 0);
-  if (iChannel1Loc != -1) glUniform1i (iChannel1Loc, 0);
-  if (iChannel2Loc != -1) glUniform1i (iChannel2Loc, 0);
-  if (iChannel3Loc != -1) glUniform1i (iChannel3Loc, 0);
+  if (iChannel0Loc != -1)
+    glUniform1i (iChannel0Loc, 0);
+  if (iChannel1Loc != -1)
+    glUniform1i (iChannel1Loc, 0);
+  if (iChannel2Loc != -1)
+    glUniform1i (iChannel2Loc, 0);
+  if (iChannel3Loc != -1)
+    glUniform1i (iChannel3Loc, 0);
   if (iTimeLoc != -1) {
     glUniform1f (iTimeLoc, totalTime); // Dynamický čas pro animace
     // glUniform1f (iTimeLoc, 5.0f); // ⚡ STATIC TIME: Completely frozen time for testing

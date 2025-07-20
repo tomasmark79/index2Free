@@ -173,8 +173,7 @@ target_include_directories(
     ${LIBRARY_NAME}
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    PUBLIC $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
-    )
+    PUBLIC $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>)
 
 # + stb_image dependencies
 CPMAddPackage(

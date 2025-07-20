@@ -50,8 +50,8 @@ public:
     std::vector<std::string> textureChannels;
     std::vector<std::string> customFunctions;
   };
-  
-  ShaderAnalysis analyzeShaderCode(const std::string& code);
+
+  ShaderAnalysis analyzeShaderCode (const std::string& code);
 
 private:
   // Konverze hlavičky shaderu podle cílové platformy
