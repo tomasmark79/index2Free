@@ -34,6 +34,8 @@ bool showOverlay = true;
 #include <Shaders/Shadertoy/Sunset2.hpp>
 #include <Shaders/Shadertoy/Anothercube.hpp>
 #include <Shaders/Shadertoy/Abug.hpp>
+#include <Shaders/Shadertoy/Bluemoonocean.hpp>
+
 
 // Not used
 //#include <Shaders/dyinguniverse/vertex_def.hpp>
@@ -121,7 +123,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 11; // Change this to switch between shaders
+  int currentShader = 12; // Change this to switch between shaders
   
   std::string shaderToUse; 
   switch(currentShader) {
@@ -137,7 +139,10 @@ void PlatformManager::setupShaders () {
     case 9: shaderToUse = fragmentShaderToySunset2; break;
     case 10: shaderToUse = fragmentShaderToyAnothercube; break;
     case 11: shaderToUse = fragmentShaderToyAbug; break;
+    case 12: shaderToUse = fragmentShaderToyBluemoonocean; break;
+
     default: shaderToUse = fragmentShaderToyHappyjumping; break;
+
   }
 
   // Determine target platform based on OpenGL version
