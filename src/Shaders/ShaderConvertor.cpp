@@ -136,10 +136,13 @@ std::string ShaderConvertor::convertUniforms(const std::string& code,
 
     // Texture kanály podle analýzy
     for (size_t i = 0; i < analysis.textureChannels.size(); ++i) {
-        uniforms += "uniform sampler2D iChannel" + std::to_string(i) + ";\n";
-        if (target == ShaderTarget::WebGL1 || target == ShaderTarget::WebGL2) {
-            uniforms += "uniform vec3 iChannelResolution[" + std::to_string(i + 1) + "];\n";
-        }
+        const std::string& channelName = analysis.textureChannels[i];
+        uniforms += "uniform sampler2D " + channelName + ";\n";
+    }
+    
+    // iChannelResolution pro všechny platformy, pokud má shader texture kanály
+    if (!analysis.textureChannels.empty()) {
+        uniforms += "uniform vec3 iChannelResolution[" + std::to_string(analysis.textureChannels.size()) + "];\n";
     }
 
     // Input/Output proměnné podle verze
