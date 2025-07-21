@@ -1,6 +1,7 @@
 #include "PlatformManager.hpp"
 #include "Logger/Logger.hpp"
 #include <memory>
+#include <fstream>
 
 #include "GuiStrings.hpp"
 #include "../Shaders/ShaderConvertor.hpp"
@@ -21,19 +22,20 @@ static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 bool showDemo = false;
 bool showOverlay = true;
 
-#include <Shaders/dyinguniverse/vertex_def.hpp>
-//#include <Shaders/dyinguniverse/fragment_def.hpp>
-//#include <Shaders/Shadertoy/Synthwave.hpp>
-//#include <Shaders/Shadertoy/Glasscube.hpp>
-//#include <Shaders/Shadertoy/Fractaltrees.hpp>
-//#include <Shaders/Shadertoy/Singularity.hpp>
-//#include <Shaders/Shadertoy/Spiralsnake.hpp> // TODO
-//#include <Shaders/Shadertoy/Seascape.hpp>
-//#include <Shaders/Shadertoy/Sunset.hpp>
-//#include <Shaders/Shadertoy/Fireflame.hpp>
-//#include <Shaders/Shadertoy/Happyjumping.hpp>
+#include <Shaders/Shadertoy/Happyjumping.hpp>
+#include <Shaders/Shadertoy/Seascape.hpp>
+#include <Shaders/Shadertoy/Synthwave.hpp>
+#include <Shaders/Shadertoy/Glasscube.hpp>
+#include <Shaders/Shadertoy/Singularity.hpp>
+#include <Shaders/Shadertoy/Fractaltrees.hpp>
+#include <Shaders/Shadertoy/Fireflame.hpp>
 #include <Shaders/Shadertoy/Tunnel.hpp>
+#include <Shaders/Shadertoy/Sunset.hpp>
+#include <Shaders/Shadertoy/Sunset2.hpp>
 
+// Not used
+//#include <Shaders/dyinguniverse/vertex_def.hpp>
+//#include <Shaders/dyinguniverse/fragment_def.hpp>
 #include <imgui_internal.h>
 
 // Function to initialize the platform
@@ -116,28 +118,71 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
-  ShaderConvertor convertor;
+  // Simple shader switcher - change this number to switch shaders (0-9)
+  int currentShader = 9; // Change this to switch between shaders
+  
+  std::string shaderToUse; 
+  switch(currentShader) {
+    case 0: shaderToUse = fragmentShaderToyHappyjumping; break;
+    case 1: shaderToUse = fragmentShaderToySeascape; break;
+    case 2: shaderToUse = fragmentShaderToySynthwave; break;
+    case 3: shaderToUse = fragmentShaderToyGlasscube; break;
+    case 4: shaderToUse = fragmentShaderToySingularity; break;
+    case 5: shaderToUse = fragmentShaderToyFractaltrees; break;
+    case 6: shaderToUse = fragmentShaderToyFireflame; break;
+    case 7: shaderToUse = fragmentShaderToyTunnel; break;
+    case 8: shaderToUse = fragmentShaderToySunset; break;
+    case 9: shaderToUse = fragmentShaderToySunset2; break;
+    default: shaderToUse = fragmentShaderToySynthwave; break;
+  }
 
-  // Use hardcoded shader source for testing
-  std::string shaderToUse = fragmentShaderToyTemplate;
-
-  // Hardcoded shader sources for different OpenGL versions
-#if defined(IMGUI_IMPL_OPENGL_ES3)
-  LOG_I_STREAM << "Using WebGL 2.0 / OpenGL ES 3.0 shader" << std::endl;
-  // WebGL 2.0 / OpenGL ES 3.0
-  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL2);
-#elif defined(IMGUI_IMPL_OPENGL_ES2)
-  LOG_I_STREAM << "Using WebGL 1.0 / OpenGL ES 2.0 shader" << std::endl;
-  // WebGL 1.0 / OpenGL ES 2.0
-  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::WebGL1);
+  // Determine target platform based on OpenGL version
+  ShaderTarget target = ShaderTarget::Desktop330;
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+  target = ShaderTarget::WebGL1;
+#elif defined(IMGUI_IMPL_OPENGL_ES3)
+  target = ShaderTarget::WebGL2;
+#elif defined(__APPLE__)
+  target = ShaderTarget::Desktop330;
 #else
-  LOG_I_STREAM << "Using Desktop OpenGL shader" << std::endl;
-  // Desktop OpenGL
-  auto result = convertor.convertFromShaderToy (shaderToUse, ShaderTarget::Desktop330);
+  target = ShaderTarget::Desktop330;
 #endif
 
-  GLuint vertexShader = compileShader (result.vertexShader.c_str (), GL_VERTEX_SHADER);
-  GLuint fragmentShader = compileShader (result.fragmentShader.c_str (), GL_FRAGMENT_SHADER);
+  // Use ShaderConvertor to convert the ShaderToy code
+  ShaderConvertor convertor;
+  ShaderConversionResult result = convertor.convertFromShaderToy(shaderToUse, target);
+  
+  if (!result.success) {
+    LOG_E_STREAM << "ShaderConvertor failed: " << result.errorMessage << std::endl;
+    // Fall back to basic error shader
+    shaderProgram_ = 0;
+    return;
+  }
+
+  LOG_I_STREAM << "Using ShaderConvertor - target: " << static_cast<int>(target) << std::endl;
+  LOG_I_STREAM << "Using ShaderConvertor - target: " << static_cast<int>(target) << std::endl;
+  LOG_I_STREAM << "Vertex shader length: " << result.vertexShader.length() << std::endl;
+  LOG_I_STREAM << "Fragment shader length: " << result.fragmentShader.length() << std::endl;
+  
+  // Debug: Save converted shaders to files for inspection
+  std::ofstream debugVertFile("converted_vertex_shader.glsl");
+  if (debugVertFile.is_open()) {
+    debugVertFile << result.vertexShader;
+    debugVertFile.close();
+  }
+  
+  std::ofstream debugFragFile("converted_fragment_shader.glsl");
+  if (debugFragFile.is_open()) {
+    debugFragFile << result.fragmentShader;
+    debugFragFile.close();
+    LOG_I_STREAM << "Debug: Converted shaders saved to converted_*_shader.glsl" << std::endl;
+  }
+
+  GLuint vertexShader = compileShader(result.vertexShader.c_str(), GL_VERTEX_SHADER);
+  GLuint fragmentShader = compileShader(result.fragmentShader.c_str(), GL_FRAGMENT_SHADER);
+
+  LOG_I_STREAM << "Vertex shader compilation result: " << (vertexShader != 0 ? "SUCCESS" : "FAILED") << std::endl;
+  LOG_I_STREAM << "Fragment shader compilation result: " << (fragmentShader != 0 ? "SUCCESS" : "FAILED") << std::endl;
 
   if (vertexShader == 0) {
     handleError ("Failed to compile vertex shader");
@@ -193,6 +238,15 @@ GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderTy
     glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<char> infoLog (logLength);
     glGetShaderInfoLog (shader, logLength, nullptr, infoLog.data ());
+    
+    // Debug: Log shader compilation error details
+    std::string shaderTypeStr = (shaderType == GL_VERTEX_SHADER) ? "VERTEX" : "FRAGMENT";
+    LOG_E_STREAM << "=== " << shaderTypeStr << " SHADER COMPILATION ERROR ===" << std::endl;
+    LOG_E_STREAM << "Error: " << infoLog.data() << std::endl;
+    LOG_E_STREAM << "=== SHADER SOURCE ===" << std::endl;
+    LOG_E_STREAM << shaderSource << std::endl;
+    LOG_E_STREAM << "=== END SHADER SOURCE ===" << std::endl;
+    
     handleError ("Failed to compile shader", infoLog.data ());
     glDeleteShader (shader);
     return 0;
@@ -497,7 +551,7 @@ void PlatformManager::renderBackground (float totalTime) {
   frameCount++;
 
   if (iResolutionLoc != -1)
-    glUniform2f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_);
+    glUniform3f (iResolutionLoc, (float)windowWidth_, (float)windowHeight_, 1.0f);
   if (iTimeLoc != -1)
     glUniform1f (iTimeLoc, totalTime);
   if (iTimeDeltaLoc != -1)

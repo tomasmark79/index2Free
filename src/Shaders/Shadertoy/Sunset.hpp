@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __SUNSET_H__
+#define __SUNSET_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToySunset = R"(
 //#define AA 2
 //#define VAPORWAVE
 //#define stereo 1. // -1. for cross-eyed (defaults to parallel view)
@@ -265,4 +265,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 */
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __SUNSET_H__

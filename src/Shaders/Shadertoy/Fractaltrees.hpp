@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __FRACTALTREES_H__
+#define __FRACTALTREES_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToyFractaltrees = R"(
 #define MAXDIST 50.
 
 struct Ray {
@@ -216,4 +216,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __FRACTALTREES_H__

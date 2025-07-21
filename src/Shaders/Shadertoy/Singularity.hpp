@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __SINGULARITY_H__
+#define __SINGULARITY_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToySingularity = R"(
 /*
     "Singularity" by @XorDev
 
@@ -51,4 +51,4 @@ void mainImage(out vec4 O, vec2 F)
     }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __SINGULARITY_H__

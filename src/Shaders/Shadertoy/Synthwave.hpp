@@ -1,7 +1,7 @@
 #ifndef __SYNTHWAVE_H__
 #define __SYNTHWAVE_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToySynthwave = R"(
 float sun(vec2 uv, float battery)
 {
  	float val = smoothstep(0.3, 0.29, length(uv));

@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __SEASCAPE_H__
+#define __SEASCAPE_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToySeascape = R"(
 /*
  * "Seascape" by Alexander Alekseev aka TDM - 2014
  * License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
@@ -208,4 +208,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord ) {
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __SEASCAPE_H__

@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __FIREFLAME_H__
+#define __FIREFLAME_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToyFireflame = R"(
 // Created by anatole duprat - XT95/2013
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 
@@ -71,4 +71,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __FIREFLAME_H__

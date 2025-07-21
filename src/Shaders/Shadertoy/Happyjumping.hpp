@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __HAPPYJUMPING_H__
+#define __HAPPYJUMPING_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToyHappyjumping = R"(
 // Copyright Inigo Quilez, 2019 - https://iquilezles.org/
 // I am the sole copyright owner of this Work.
 // You cannot host, display, distribute or share this Work neither
@@ -513,4 +513,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __HAPPYJUMPING_H__

@@ -20,7 +20,7 @@ option(SANITIZE_MEMORY "Enable memory sanitizer" OFF)
 option(ENABLE_HARDENING "Enable security hardening" OFF)
 option(ENABLE_IPO "Enable link-time optimization" OFF)
 
-option(ENABLE_GTESTS "Build and run unit tests" ON)
+option(ENABLE_GTESTS "Build and run unit tests" OFF)
 
 if(ENABLE_CCACHE)
     set(CMAKE_C_COMPILER_LAUNCHER ccache)

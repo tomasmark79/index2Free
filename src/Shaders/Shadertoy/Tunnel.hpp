@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __TUNNEL_H__
+#define __TUNNEL_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToyTunnel = R"(
 float sdf(in vec3 pos){
     pos = mod(pos, 10.);
     return length(pos - vec3(5.)) - 1.;
@@ -38,4 +38,4 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __TUNNEL_H__

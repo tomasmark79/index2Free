@@ -1,7 +1,7 @@
-#ifndef __SYNTHWAVE_H__
-#define __SYNTHWAVE_H__
+#ifndef __GLASSCUBE_H__
+#define __GLASSCUBE_H__
 
-const char* fragmentShaderToyTemplate = R"(
+const char* fragmentShaderToyGlasscube = R"(
 // Created by Danil (2021+) https://cohost.org/arugl
 // License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.
 // self https://www.shadertoy.com/view/NslGRN
@@ -757,4 +757,4 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
 }
 )";
 
-#endif // __SYNTHWAVE_H__
+#endif // __GLASSCUBE_H__
