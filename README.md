@@ -15,9 +15,8 @@ https://digitalspace.name/new/oop2/index2Free.html
 https://digitalspace.name/new/oop3/index2Free.html
 
 ## ToDo
- 
-- shader fragment convertor 90% done
-  - needed fix for some complex shaders
+- fragment shaders convertor to WebGL1
+- fragment shaders convertor to WebGL2
 
 - shader switcher on the fly (more vertex & fragment shaders builtin)
 - window position (centered, corners, etc.)
@@ -25,6 +24,7 @@ https://digitalspace.name/new/oop3/index2Free.html
 - ImGui theme switcher on the fly (more themes builtin)
 - build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
+- ~~fragment shaders convertor to OpenGL~~
 - ~~scaling ui on the fly with + - keys~~
 
 ## Missing dependencies
