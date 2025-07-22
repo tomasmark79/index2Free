@@ -1,9 +1,11 @@
-import os, json, uuid
+import os, json, glob
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, CMakeDeps
 from conan.tools.system import package_manager
 from conan.tools.files import copy
 from conan.errors import ConanInvalidConfiguration
+from conan.tools.files import patch
+from conan.tools.files import replace_in_file
 
 # Template Configuration Notes:
 # ----------------------------------------------------------
@@ -27,6 +29,7 @@ from conan.errors import ConanInvalidConfiguration
 
 class ProjectTemplateRecipe(ConanFile):
     name = "corelib"
+    exports_sources = "patches/*"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
 
@@ -35,8 +38,10 @@ class ProjectTemplateRecipe(ConanFile):
 
     def generate(self): 
         tc = CMakeToolchain(self)
-        tc.generate()
+        tc.variables["CMAKE_BUILD_TYPE"] = str(self.settings.build_type)
         
+        tc.generate()
+
         # Update preset names behind tc.generate()
         self.update_cmake_presets("CMakePresets.json")
 
@@ -46,7 +51,6 @@ class ProjectTemplateRecipe(ConanFile):
         copy(self, "*sdl2*", os.path.join(self.dependencies["imgui"].package_folder,
              "res", "bindings"), os.path.join(self.source_folder, "src/bindings"))
         
-
         # Patchování Conan CMake souborů pro odstranění stdc++ z system libs
         self.patch_remove_stdcpp_from_system_libs()
         
@@ -54,64 +58,48 @@ class ProjectTemplateRecipe(ConanFile):
     def configure(self):
         # Force static linking for all dependencies (recommended for templates)
         self.options["*"].shared = False
-        
-        # if mingw used
+       
         if self.settings.os == "Windows" and self.settings.compiler == "gcc":
             self.options["freetype"].with_png = False
             self.options["freetype"].with_brotli = False
             self.options["freetype"].with_zlib = False
             self.options["freetype"].with_bzip2 = False
 
-        # Handle fPIC option for static libraries on non-Windows systems
+        # Handle fPIC option for static libraries on non-Windows systems    
         if self.settings.os != "Windows":
             if self.options.fPIC:
                 self.options["*"].fPIC = True
 
     def requirements(self):
-        # Core dependencies - adjust as needed for your project
-        self.requires("fmt/[~11.1]")            # Modern formatting library
-        self.requires("nlohmann_json/[~3.12]")  # JSON parsing library
+        self.requires("m4/1.4.20", override=True)  # Custom build with upstream fix
+        self.requires("fmt/[~11.1]") 
+        self.requires("nlohmann_json/[~3.12]")
         self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
 
         if self.settings.os != "Emscripten":
-            # if mingw used
-            if self.settings.os == "Windows" and self.settings.compiler == "gcc":
-                self.requires("libpng/1.6.50", override=True)
-                self.requires("libiconv/1.17", override=True)
-                self.requires("glew/2.2.0")
-
-                
             self.requires("sdl/2.32.2", override=True)  # Use the latest stable version of SDL
             self.requires("sdl_image/2.8.2")
             self.requires("sdl_ttf/2.24.0")
             self.requires("sdl_mixer/2.8.0")
             self.requires("sdl_net/2.2.0")
 
-        # Additional dependencies - uncomment as needed:
-        # self.requires("gtest/1.16.0")           # Google Test (if CPM not used)
-        # self.requires("spdlog/[~1.12]")         # Logging library
-        # self.requires("zlib/[~1.3]")            # Compression library
-        # self.requires("yaml-cpp/0.8.0")         # YAML parsing
-        # self.requires("boost/[~1.82]")          # Boost libraries
+            if self.settings.os == "Windows" and self.settings.compiler == "gcc":
+                self.requires("glew/2.2.0")
 
-    #def build_requirements(self):
-        # self.tool_requires("cmake/[>3.14]")
+            # if self.settings.arch == "armv8":            
+            #     self.requires("libunwind/1.7.0", override=True)  # 1.8.0 is __asm__ __volatile__ ( error
+            #     self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface library
 
-    # def system_requirements(self):
-        # dnf = package_manager.Dnf(self)
-        # dnf.install("SDL2-devel")
-        # apt = package_manager.Apt(self)
-        # apt.install(["libsdl2-dev"])
 
+
+
+
+
+
+    # Optional: Define system requirements for Linux distributions    
     def imports(self):
         self.copy("license*", dst="licenses", folder=True, ignore_case=True)
-
-
-
-
-
-
 
     # ###################################################################
     # Functions Utilities - no need to change
@@ -136,7 +124,6 @@ class ProjectTemplateRecipe(ConanFile):
                 new_name = preset_name
                 preset["name"] = new_name
                 # Update displayName to show the new preset name
-                preset["displayName"] = f"'{preset_name}' config"
                 name_mapping[old_name] = new_name  # Uložení pro reference
             for preset in data.get("buildPresets", []):
                 if preset["configurePreset"] in name_mapping:

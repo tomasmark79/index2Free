@@ -72,10 +72,8 @@ find_package(glm CONFIG REQUIRED)
 
 # find_package(glew REQUIRED)
 if(NOT "${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-
     # set(OPENGL_opengl_LIBRARY "/usr/lib64/libOpenGL.so") set(OPENGL_glx_LIBRARY
     # "/usr/lib64/libGLX.so")
-
     find_package(OpenGL REQUIRED MODULE)
     find_package(GLEW REQUIRED)
 
