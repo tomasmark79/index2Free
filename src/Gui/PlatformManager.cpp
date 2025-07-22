@@ -36,12 +36,6 @@ bool showOverlay = true;
 #include <Shaders/Shadertoy/Abug.hpp>
 #include <Shaders/Shadertoy/Bluemoonocean.hpp>
 
-
-// Not used
-//#include <Shaders/dyinguniverse/vertex_def.hpp>
-//#include <Shaders/dyinguniverse/fragment_def.hpp>
-#include <imgui_internal.h>
-
 // Function to initialize the platform
 void initializePlatform () {
 #if defined(__EMSCRIPTEN__)
