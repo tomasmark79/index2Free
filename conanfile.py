@@ -1,11 +1,8 @@
-import os, json, glob
+import os
+import json
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMake, CMakeDeps
-from conan.tools.system import package_manager
+from conan.tools.cmake import CMakeToolchain, CMakeDeps
 from conan.tools.files import copy
-from conan.errors import ConanInvalidConfiguration
-from conan.tools.files import patch
-from conan.tools.files import replace_in_file
 
 # Template Configuration Notes:
 # ----------------------------------------------------------
@@ -28,7 +25,7 @@ from conan.tools.files import replace_in_file
 # ------------------------------------------------- --
 
 class ProjectTemplateRecipe(ConanFile):
-    name = "corelib"
+    name = "index2"
     exports_sources = "patches/*"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps"
@@ -36,49 +33,60 @@ class ProjectTemplateRecipe(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
 
+    # Imports
+    def imports(self):
+        self.copy("license*", dst="licenses", folder=True, ignore_case=True)
+
+    # Generate CMake toolchain and presets
     def generate(self): 
         tc = CMakeToolchain(self)
         tc.variables["CMAKE_BUILD_TYPE"] = str(self.settings.build_type)
-        
         tc.generate()
 
-        # Update preset names behind tc.generate()
-        self.update_cmake_presets("CMakePresets.json")
+        self.dotnameintegrated_update_cmake_presets()
+        self.dotnameintegrated_patch_remove_stdcpp_from_system_libs()
 
-        # libs/emscripten/emscripten_mainloop_stub.h content copied by hand to /src/bindings behind tc.generate()
-        copy(self, "*opengl3*", os.path.join(self.dependencies["imgui"].package_folder,
-            "res", "bindings"), os.path.join(self.source_folder, "src/bindings"))
-        copy(self, "*sdl2*", os.path.join(self.dependencies["imgui"].package_folder,
-             "res", "bindings"), os.path.join(self.source_folder, "src/bindings"))
+        # Copy ImGui bindings after tc.generate()
+        copy(self, "*opengl3*", 
+             os.path.join(self.dependencies["imgui"].package_folder, "res", "bindings"), 
+             os.path.join(self.source_folder, "src/bindings"))
+        copy(self, "*sdl2*", 
+             os.path.join(self.dependencies["imgui"].package_folder, "res", "bindings"), 
+             os.path.join(self.source_folder, "src/bindings"))
         
-        # Patchování Conan CMake souborů pro odstranění stdc++ z system libs
-        self.patch_remove_stdcpp_from_system_libs()
-        
-    # Consuming recipe
+    # Configure options and settings
     def configure(self):
-        # Force static linking for all dependencies (recommended for templates)
         self.options["*"].shared = False
        
+        # Handle fPIC option for static libraries on non-Windows systems    
+        if self.settings.os != "Windows":
+            if self.options.fPIC:
+                self.options["*"].fPIC = True
+
         if self.settings.os == "Windows" and self.settings.compiler == "gcc":
             self.options["freetype"].with_png = False
             self.options["freetype"].with_brotli = False
             self.options["freetype"].with_zlib = False
             self.options["freetype"].with_bzip2 = False
 
-        # Handle fPIC option for static libraries on non-Windows systems    
-        if self.settings.os != "Windows":
-            if self.options.fPIC:
-                self.options["*"].fPIC = True
+        if self.settings.os == "Linux" and self.settings.compiler == "gcc" and self.settings.arch == "armv8":
+            self.options["freetype"].with_png = False
+            self.options["freetype"].with_brotli = False
+            self.options["freetype"].with_zlib = False
+            self.options["freetype"].with_bzip2 = False
+            self.options["sdl"].libunwind = False
 
+    # Requirements for dependencies
     def requirements(self):
         self.requires("m4/1.4.20", override=True)  # Custom build with upstream fix
         self.requires("fmt/[~11.1]") 
         self.requires("nlohmann_json/[~3.12]")
         self.requires("imgui/1.92.0")
         self.requires("glm/1.0.1")
+        self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface
 
         if self.settings.os != "Emscripten":
-            self.requires("sdl/2.32.2", override=True)  # Use the latest stable version of SDL
+            self.requires("sdl/2.32.2", override=True)  # Latest stable SDL version
             self.requires("sdl_image/2.8.2")
             self.requires("sdl_ttf/2.24.0")
             self.requires("sdl_mixer/2.8.0")
@@ -87,89 +95,94 @@ class ProjectTemplateRecipe(ConanFile):
             if self.settings.os == "Windows" and self.settings.compiler == "gcc":
                 self.requires("glew/2.2.0")
 
-            # if self.settings.arch == "armv8":            
-            #     self.requires("libunwind/1.7.0", override=True)  # 1.8.0 is __asm__ __volatile__ ( error
-            #     self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface library
+            # ARM-specific requirements (commented out)
+            if self.settings.arch == "armv8":
+                self.requires("egl/system", override=True)  # Use system EGL
 
+    # ---------------------------------------------------------------------
+    # Utility Functions - no need to change
+    # ---------------------------------------------------------------------
 
-
-
-
-
-
-    # Optional: Define system requirements for Linux distributions    
-    def imports(self):
-        self.copy("license*", dst="licenses", folder=True, ignore_case=True)
-
-    # ###################################################################
-    # Functions Utilities - no need to change
-    # ###################################################################
-
-    # Dynamic change of names of CMakePresets.json - avoid name conflicts
-    def update_cmake_presets(self, preset_file):
-        """
-        Updates CMake preset names to avoid conflicts during parallel builds.
-        Preset names will be replaced with a generated name for simplicity.
-        """
+    def dotnameintegrated_update_cmake_presets(self):
+        """Dynamic change of names in CMakePresets.json to avoid name conflicts"""
         preset_file = "CMakePresets.json"
-        if os.path.exists(preset_file):
+        if not os.path.exists(preset_file):
+            return
+            
+        try:
             with open(preset_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            # Generate a unique preset name based on build settings
-            preset_name = f"{str(self.settings.build_type).lower()}-{str(self.settings.os).lower()}-{self.settings.arch}-{self.settings.compiler}-{self.settings.compiler.version}"
+                
+            preset_name = (f"{str(self.settings.build_type).lower()}-"
+                          f"{str(self.settings.os).lower()}-"
+                          f"{self.settings.arch}-"
+                          f"{self.settings.compiler}-"
+                          f"{self.settings.compiler.version}")
+            
+            # Collect old names from configurePresets for mapping
             name_mapping = {}
             for preset in data.get("configurePresets", []):
                 old_name = preset["name"]
-                # Assign generated name directly
-                new_name = preset_name
-                preset["name"] = new_name
-                # Update displayName to show the new preset name
-                name_mapping[old_name] = new_name  # Uložení pro reference
-            for preset in data.get("buildPresets", []):
-                if preset["configurePreset"] in name_mapping:
-                    # Map build presets to new preset name
-                    preset["name"] = preset_name
-                    preset["configurePreset"] = preset_name
-            for preset in data.get("testPresets", []):
-                if preset["configurePreset"] in name_mapping:
-                    # Map test presets to new preset name
-                    preset["name"] = preset_name
-                    preset["configurePreset"] = preset_name
+                preset["name"] = preset["displayName"] = preset_name
+                name_mapping[old_name] = preset_name
+                
+            # Update buildPresets and testPresets in one pass
+            for preset_type in ["buildPresets", "testPresets"]:
+                for preset in data.get(preset_type, []):
+                    if preset.get("configurePreset") in name_mapping:
+                        preset["name"] = preset["configurePreset"] = preset_name
+                        
             with open(preset_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
+                
+        except (json.JSONDecodeError, IOError) as e:
+            self.output.warn(f"Failed to update CMake presets: {e}")
 
-   # Patch Conan CMake files to remove stdc++ from SYSTEM_LIBS voiding static linking issues
-    # call it as self.patch_remove_stdcpp_from_system_libs() in generate() or build() method
-    def patch_remove_stdcpp_from_system_libs(self):
-        """Odstranění stdc++ z SYSTEM_LIBS v generovaných Conan CMake souborech"""
+    def dotnameintegrated_patch_remove_stdcpp_from_system_libs(self):
+        """Remove stdc++ from SYSTEM_LIBS in generated Conan CMake files"""
         import glob
         import re
         
-        # Najdi všechny *-*-x86_64-data.cmake soubory
-        pattern = os.path.join(self.generators_folder or ".", "*-*-x86_64-data.cmake")
-        for cmake_file in glob.glob(pattern):
+        # Find all *-data.cmake files for all platforms and architectures
+        generators_path = self.generators_folder or "."
+        patterns = [
+            "*-data.cmake",          # General pattern for all files
+            "*-*-*-data.cmake",      # Pattern for specific platforms (name-os-arch-data.cmake)
+        ]
+        
+        cmake_files = []
+        for pattern in patterns:
+            cmake_files.extend(glob.glob(os.path.join(generators_path, pattern)))
+            
+        # Remove duplicates
+        cmake_files = list(set(cmake_files))
+        
+        if not cmake_files:
+            return
+            
+        # Compile regex pattern once for better performance
+        system_libs_pattern = re.compile(
+            r'(set\([^_]*_SYSTEM_LIBS(?:_[A-Z]+)?\s+[^)]*?)stdc\+\+([^)]*\))', 
+            re.MULTILINE
+        )
+        
+        patched_count = 0
+        for cmake_file in cmake_files:
             try:
                 with open(cmake_file, 'r', encoding='utf-8') as f:
                     content = f.read()
                 
-                # Nahraď "m stdc++" za "m" ve všech SYSTEM_LIBS_* variantách (DEBUG, RELEASE, atd.)
-                modified_content = re.sub(
-                    r'(set\([^_]*_SYSTEM_LIBS_[A-Z]+\s+[^)]*?)stdc\+\+([^)]*\))',
-                    r'\1\2',
-                    content
-                )
-                
-                # Také nahraď v obecných SYSTEM_LIBS bez suffixu
-                modified_content = re.sub(
-                    r'(set\([^_]*_SYSTEM_LIBS\s+[^)]*?)stdc\+\+([^)]*\))',
-                    r'\1\2',
-                    modified_content
-                )
+                # Replace all occurrences of stdc++ in SYSTEM_LIBS
+                modified_content = system_libs_pattern.sub(r'\1\2', content)
                 
                 if modified_content != content:
                     with open(cmake_file, 'w', encoding='utf-8') as f:
                         f.write(modified_content)
-                    print(f"Patched {cmake_file} - removed stdc++ from SYSTEM_LIBS")
+                    self.output.info(f"Patched {cmake_file} - removed stdc++ from SYSTEM_LIBS")
+                    patched_count += 1
                     
-            except Exception as e:
-                print(f"Warning: Could not patch {cmake_file}: {e}")
+            except (IOError, OSError) as e:
+                self.output.warn(f"Could not patch {cmake_file}: {e}")
+        
+        if patched_count > 0:
+            self.output.info(f"Successfully patched {patched_count} CMake files")
