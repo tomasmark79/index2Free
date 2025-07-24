@@ -5,16 +5,16 @@
 #include <gtest/gtest.h>
 
 TEST (AppLogic, HandlesArguments) {
-  const char* argv[] = { "index2", "--help" };
+  const char* argv[] = { "DotNameStandalone", "--help" };
   EXPECT_EQ (runApp (2, argv), 0);
 }
 
 TEST (AppLogic, HandlesArgumentsNoLibrary) {
-  const char* argv[] = { "index2", "--omit" };
+  const char* argv[] = { "DotNameStandalone", "--omit" };
   EXPECT_EQ (runApp (2, argv), 0);
 }
 
 TEST (AppLogic, HandlesArgumentsLog2File) {
-  const char* argv[] = { "index2", "--log2file" };
+  const char* argv[] = { "DotNameStandalone", "--log2file" };
   EXPECT_EQ (runApp (2, argv), 0);
 }
