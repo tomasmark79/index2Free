@@ -2,6 +2,7 @@
 /doc/latex
 /build/
 /trash/
+/docker/
 /dotnamebackup/
 Solution.log
 CMakeUserPresets.json

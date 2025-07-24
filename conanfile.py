@@ -15,13 +15,13 @@ from conan.tools.files import copy
 
 # DO NOT use cmake_layout(self) HERE!
 # ------------------------------------------------- --
-    # This template is using custom layout          --
-    # to define build output layout!                --
-    # ├── Build                                     --
-    #     ├── Artefacts - tarballs of installation  --
-    #     ├── Install - final installation          --
-    #     ├── Library - library build               --
-    #     └── Standalone - standalone build         --
+#   This template is using custom layout          --
+#   to define build output layout!                --
+#   ├── Build                                     --
+#       ├── Artefacts - tarballs of installation  --
+#       ├── Install - final installation          --
+#       ├── Library - library build               --
+#       └── Standalone - standalone build         --
 # ------------------------------------------------- --
 
 class ProjectTemplateRecipe(ConanFile):
@@ -63,25 +63,25 @@ class ProjectTemplateRecipe(ConanFile):
             if self.options.fPIC:
                 self.options["*"].fPIC = True
 
+        # ARM64/RPI4 specific optimizations
+        if self.settings.arch == "armv8":
+            self.options["sdl"].libunwind = False
+            # Optimalizace pro ARM64
+            self.options["sdl"].alsa = True
+            self.options["sdl"].pulse = True
+
         if self.settings.os == "Windows" and self.settings.compiler == "gcc":
             self.options["freetype"].with_png = False
             self.options["freetype"].with_brotli = False
             self.options["freetype"].with_zlib = False
             self.options["freetype"].with_bzip2 = False
 
-        if self.settings.os == "Linux" and self.settings.compiler == "gcc" and self.settings.arch == "armv8":
-            self.options["freetype"].with_png = False
-            self.options["freetype"].with_brotli = False
-            self.options["freetype"].with_zlib = False
-            self.options["freetype"].with_bzip2 = False
-            self.options["sdl"].libunwind = False
-
     # Requirements for dependencies
     def requirements(self):
-        self.requires("m4/1.4.20", override=True)  # Custom build with upstream fix
-        self.requires("fmt/[~11.1]") 
-        self.requires("nlohmann_json/[~3.12]")
-        self.requires("imgui/1.92.0")
+        self.requires("m4/1.4.20@local/stable", override=True)  # Custom build with upstream fix  
+        self.requires("fmt/11.0.2") 
+        self.requires("nlohmann_json/3.11.3")
+        self.requires("imgui/1.91.5")
         self.requires("glm/1.0.1")
         self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface
 
@@ -96,8 +96,8 @@ class ProjectTemplateRecipe(ConanFile):
                 self.requires("glew/2.2.0")
 
             # ARM-specific requirements (commented out)
-            if self.settings.arch == "armv8":
-                self.requires("egl/system", override=True)  # Use system EGL
+            #if self.settings.arch == "armv8":
+                 #self.requires("wayland/system", override=True)
 
     # ---------------------------------------------------------------------
     # Utility Functions - no need to change
