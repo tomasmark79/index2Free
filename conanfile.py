@@ -63,13 +63,6 @@ class ProjectTemplateRecipe(ConanFile):
             if self.options.fPIC:
                 self.options["*"].fPIC = True
 
-        # ARM64/RPI4 specific optimizations
-        if self.settings.arch == "armv8":
-            self.options["sdl"].libunwind = False
-            # Optimalizace pro ARM64
-            self.options["sdl"].alsa = True
-            self.options["sdl"].pulse = True
-
         if self.settings.os == "Windows" and self.settings.compiler == "gcc":
             self.options["freetype"].with_png = False
             self.options["freetype"].with_brotli = False
@@ -93,8 +86,16 @@ class ProjectTemplateRecipe(ConanFile):
             self.requires("sdl_net/2.2.0")
 
             if self.settings.os == "Windows" and self.settings.compiler == "gcc":
+                self.requires("xorg/system", override=True)  # Use system Xorg libraries
                 self.requires("glew/2.2.0")
 
+
+            if self.settings.os == "Linux" and self.settings.arch == "armv8":
+                # For cross-compilation, disable wayland in xkbcommon to avoid protocol path issues
+                # Use system wayland-protocols from sysroot instead
+                self.requires("glew/2.2.0")
+                self.requires("xkbcommon/1.6.0", options={"with_wayland": False})
+                
     # ---------------------------------------------------------------------
     # Utility Functions - no need to change
     # ---------------------------------------------------------------------
