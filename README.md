@@ -16,6 +16,8 @@ https://digitalspace.name/new/oop3/index2Free.html
 
 ## Docker dev - exprimental - preparation to bump to upstream template
 
+AllInOneBatch
+
 ```bash
 conan export ~/.conan2/tomaspack/m4/ --name=m4 --version=1.4.20 --user=local --channel=stable
 conan install . --output-folder="./build/standalone/dockerhell/debug" --deployer=full_deploy --build=missing --settings build_type=Debug
