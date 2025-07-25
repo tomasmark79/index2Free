@@ -74,8 +74,9 @@ class ProjectTemplateRecipe(ConanFile):
         self.requires("m4/1.4.20@local/stable", override=True)  # Custom build with upstream fix  
         self.requires("fmt/11.2.0") 
         self.requires("nlohmann_json/3.12.0")
-        self.requires("imgui/1.91.5")
         self.requires("glm/1.0.1")
+        self.requires("glew/2.2.0")
+        self.requires("imgui/1.91.5")
         self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface
 
         if self.settings.os != "Emscripten":
@@ -87,15 +88,7 @@ class ProjectTemplateRecipe(ConanFile):
 
             if self.settings.os == "Windows" and self.settings.compiler == "gcc":
                 self.requires("xorg/system", override=True)  # Use system Xorg libraries
-                self.requires("glew/2.2.0")
 
-
-            if self.settings.os == "Linux" and self.settings.arch == "armv8":
-                # For cross-compilation, disable wayland in xkbcommon to avoid protocol path issues
-                # Use system wayland-protocols from sysroot instead
-                self.requires("glew/2.2.0")
-                self.requires("xkbcommon/1.6.0", options={"with_wayland": False})
-                
     # ---------------------------------------------------------------------
     # Utility Functions - no need to change
     # ---------------------------------------------------------------------

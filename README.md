@@ -14,6 +14,15 @@ https://digitalspace.name/new/oop1/index2Free.html
 https://digitalspace.name/new/oop2/index2Free.html
 https://digitalspace.name/new/oop3/index2Free.html
 
+## Docker dev - exprimental - preparation to bump to upstream template
+
+```bash
+conan export ~/.conan2/tomaspack/m4/ --name=m4 --version=1.4.20 --user=local --channel=stable
+conan install . --output-folder="./build/standalone/dockerhell/debug" --deployer=full_deploy --build=missing --settings build_type=Debug
+source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake -S "./standalone" -B "./build/standalone/dockerhell/debug" -DCMAKE_TOOLCHAIN_FILE="/workspace/build/standalone/dockerhell/debug/conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="/workspace/build/installation/dockerhell/debug"
+source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake --build "./build/standalone/dockerhell/debug" -j $(nproc)
+```
+
 ## ToDo
 - raspberry PI4/5 cross aarch64 portability
 - fragment shaders convertor to WebGL1
