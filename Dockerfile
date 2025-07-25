@@ -1,5 +1,4 @@
-#FROM --platform=linux/arm64 debian:12
-FROM --platform=linux/amd64 debian:12
+FROM  debian:12
 
 # Argumenty pro uživatele (předané z docker-compose nebo build)
 ARG USER_ID=1000
@@ -24,7 +23,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc g++ cmake make git pkg-config \
-    python3 python3-pip ccache \
+    python3 python3-pip python3-venv ccache \
     vim wget mc ninja-build sudo gosu \
     && groupadd -g ${GROUP_ID} ${USERNAME} \
     && useradd -u ${USER_ID} -g ${GROUP_ID} -m -s /bin/bash ${USERNAME} \
@@ -38,12 +37,15 @@ RUN chmod +x /entrypoint.sh
 
 USER ${USERNAME}
 
-# Přidání ~/.local/bin do PATH pro uživatele
-ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
+# Vytvoření virtuálního prostředí a instalace Conan
+RUN python3 -m venv /home/${USERNAME}/.conan-venv && \
+    /home/${USERNAME}/.conan-venv/bin/pip install --upgrade pip setuptools wheel && \
+    /home/${USERNAME}/.conan-venv/bin/pip install conan && \
+    echo "Conan installed successfully" && \
+    /home/${USERNAME}/.conan-venv/bin/conan --version
 
-# Instalace Conan jako uživatel
-RUN pip3 install --break-system-packages conan && \
-    echo "Conan installed successfully"
+# Přidání conan do PATH
+ENV PATH="/home/${USERNAME}/.conan-venv/bin:${PATH}"
 
 # Přepneme zpět na root pro entrypoint
 USER root
