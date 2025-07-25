@@ -14,15 +14,57 @@ https://digitalspace.name/new/oop1/index2Free.html
 https://digitalspace.name/new/oop2/index2Free.html
 https://digitalspace.name/new/oop3/index2Free.html
 
-## Docker dev - exprimental - preparation to bump to upstream template
+## Dockerhell Workflow - awesome aarch64 cross compilation template
 
-AllInOneBatch
+```bash
+# compose container
+docker-compose up -d --build --force-recreate
+# stop and remove the container
+docker-compose down --remove-orphans
+# remove the container
+docker-compose rm -f
+```
+```bash
+# build the image
+docker build -t dockerhell:latest -f Dockerfile .
+```
+```bash
+# run the container
+docker run --rm -it -v "$(pwd):/workspace" -w /workspace dockerhell:latest bash
+# or Run the container with docker-compose
+docker-compose run --rm dockerhell bash
+```
+```bash
+# run the setup script
+./dcsetup.sh
+# run the build script
+./dbuild.sh
+# run the cleanup script
+./docker-cleanup.sh
+```
 
+---
+
+# Build Steps
+
+## 1. Install dependencies
 ```bash
 conan export ~/.conan2/tomaspack/m4/ --name=m4 --version=1.4.20 --user=local --channel=stable
 conan install . --output-folder="./build/standalone/dockerhell/debug" --deployer=full_deploy --build=missing --settings build_type=Debug
+```
+
+## 2. Configure
+```bash
 source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake -S "./standalone" -B "./build/standalone/dockerhell/debug" -DCMAKE_TOOLCHAIN_FILE="/workspace/build/standalone/dockerhell/debug/conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="/workspace/build/installation/dockerhell/debug"
+```
+## 3. Build
+```bash
 source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake --build "./build/standalone/dockerhell/debug" -j $(nproc)
+```
+
+# Clean up
+./docker-cleanup.sh
+
 ```
 
 ## ToDo

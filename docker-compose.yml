@@ -4,21 +4,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        USER_ID: ${USER_ID:-1000}
-        GROUP_ID: ${GROUP_ID:-1000}
-        USERNAME: ${USERNAME:-developer}
+    user: root
     privileged: true
     volumes:
       - .:/workspace  
       - /home/tomas/.cache/ccache:/workspace/.ccache
-      - /home/tomas/.conan2-dockerhell:/home/tomas/.conan2:rw
+      - /home/tomas/.conan2-dockerhell:/root/.conan2:rw
     working_dir: /workspace
     stdin_open: true
     tty: true
-    environment:
-      - USER_ID=${USER_ID:-1000}
-      - GROUP_ID=${GROUP_ID:-1000}
-      - USERNAME=${USERNAME:-developer}
     command: >
-      /bin/bash -c "echo 'Starting container as ${USERNAME:-developer}' && exec /bin/bash"
+      /bin/bash

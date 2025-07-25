@@ -1,5 +1,4 @@
 #!/bin/bash
-# filepath: /home/tomas/dev/cpp/templates/index2/build.sh
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
