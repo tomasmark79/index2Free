@@ -47,22 +47,22 @@ docker-compose run --rm dockerhell bash
 
 # Build Steps
 
-## 1. Install dependencies
+### 1. Install dependencies
 ```bash
 conan export ~/.conan2/tomaspack/m4/ --name=m4 --version=1.4.20 --user=local --channel=stable
 conan install . --output-folder="./build/standalone/dockerhell/debug" --deployer=full_deploy --build=missing --settings build_type=Debug
 ```
 
-## 2. Configure
+### 2. Configure
 ```bash
 source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake -S "./standalone" -B "./build/standalone/dockerhell/debug" -DCMAKE_TOOLCHAIN_FILE="/workspace/build/standalone/dockerhell/debug/conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="/workspace/build/installation/dockerhell/debug"
 ```
-## 3. Build
+### 3. Build
 ```bash
 source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake --build "./build/standalone/dockerhell/debug" -j $(nproc)
 ```
 
-# Clean up
+### Clean up
 ./docker-cleanup.sh
 
 ```
