@@ -56,7 +56,6 @@ class ProjectTemplateRecipe(ConanFile):
         
     # Configure options and settings
     def configure(self):
-        self.options["*"].shared = False
        
         # Handle fPIC option for static libraries on non-Windows systems    
         if self.settings.os != "Windows":

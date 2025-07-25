@@ -1,74 +1,22 @@
 [![Linux](https://github.com/tomasmark79/index2Free/actions/workflows/linux.yml/badge.svg)](https://github.com/tomasmark79/index2Free/actions/workflows/linux.yml)
 [![MacOS](https://github.com/tomasmark79/index2Free/actions/workflows/macos.yml/badge.svg)](https://github.com/tomasmark79/index2Free/actions/workflows/macos.yml)
-<!-- [![Windows](https://github.com/tomasmark79/index2Free/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/index2Free/actions/workflows/windows.yml)   -->
+[![Windows](https://github.com/tomasmark79/index2Free/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/index2Free/actions/workflows/windows.yml)
 
 ## Index2
 
-## Refactored public release of C++ Portfolio Website [digitalspace.name](https://digitalspace.name/new/index.html)  
+## Refactored public release of C++ Portfolio Website  
+# [digitalspace.name](https://digitalspace.name/new/index.html)  
 
 >refactored 80%
 
 Examples from development 
 
-https://digitalspace.name/new/oop1/index2Free.html
-https://digitalspace.name/new/oop2/index2Free.html
-https://digitalspace.name/new/oop3/index2Free.html
-
-## Dockerhell Workflow - awesome aarch64 cross compilation template
-
-```bash
-# compose container
-docker-compose up -d --build --force-recreate
-# stop and remove the container
-docker-compose down --remove-orphans
-# remove the container
-docker-compose rm -f
-```
-```bash
-# build the image
-docker build -t dockerhell:latest -f Dockerfile .
-```
-```bash
-# run the container
-docker run --rm -it -v "$(pwd):/workspace" -w /workspace dockerhell:latest bash
-# or Run the container with docker-compose
-docker-compose run --rm dockerhell bash
-```
-```bash
-# run the setup script
-./dcsetup.sh
-# run the build script
-./dbuild.sh
-# run the cleanup script
-./docker-cleanup.sh
-```
-
----
-
-# Build Steps
-
-### 1. Install dependencies
-```bash
-conan export ~/.conan2/tomaspack/m4/ --name=m4 --version=1.4.20 --user=local --channel=stable
-conan install . --output-folder="./build/standalone/dockerhell/debug" --deployer=full_deploy --build=missing --settings build_type=Debug
-```
-
-### 2. Configure
-```bash
-source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake -S "./standalone" -B "./build/standalone/dockerhell/debug" -DCMAKE_TOOLCHAIN_FILE="/workspace/build/standalone/dockerhell/debug/conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX="/workspace/build/installation/dockerhell/debug"
-```
-### 3. Build
-```bash
-source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake --build "./build/standalone/dockerhell/debug" -j $(nproc)
-```
-
-### Clean up
-./docker-cleanup.sh
-
-```
+[remove free suffix from the link]  
+https://digitalspace.name/new/oop1/index2Free.html  
+https://digitalspace.name/new/oop2/index2Free.html  
+https://digitalspace.name/new/oop3/index2Free.html  
 
 ## ToDo
-- raspberry PI4/5 cross aarch64 portability
 - fragment shaders convertor to WebGL1
 - fragment shaders convertor to WebGL2
 - shader switcher on the fly (more vertex & fragment shaders builtin)
@@ -78,17 +26,10 @@ source "./build/standalone/dockerhell/debug/conanbuild.sh" && cmake --build "./b
 - build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
 - collect licenses from 3rd party shaders
+- ~~raspberry PI4/5 aarch64 compilaboloty~~
 - ~~Linux x86_64, Windows x64, Wasm Emscripten ready~~
 - ~~fragment shaders convertor to Desktop OpenGL~~
 - ~~scaling ui on the fly with + - keys~~
-
-## Missing dependencies
-
-How to look for required library in Fedora.
-
-```bash
-dnf provides */libGLEW.so.2.2
-```
 
 ## License
 
