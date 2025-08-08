@@ -117,7 +117,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 1; // Change this to switch between shaders
+  int currentShader = 2; // Change this to switch between shaders
 
   std::string shaderToUse;
   switch (currentShader) {
@@ -520,10 +520,6 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
   io_->Fonts->Clear ();
   io_->Fonts->AddFontFromFileTTF (fnt.string ().c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
-
-  // Force recreation of font texture on next frame
-  // Podle komentáře z 2024-06-28 se font textura automaticky obnovuje v ImGui_ImplOpenGL3_NewFrame(). Ale musíme ji explicitně zničit, aby se obnovila
-  ImGui_ImplOpenGL3_DestroyFontsTexture ();
 
   // Always start scale from default style sizes
   ImGui::GetStyle () = defaultStyle_;

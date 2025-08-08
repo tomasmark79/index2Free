@@ -74,7 +74,7 @@ class ProjectTemplateRecipe(ConanFile):
         self.requires("fmt/11.2.0") 
         self.requires("nlohmann_json/3.12.0")
         self.requires("glm/1.0.1")
-        self.requires("imgui/1.91.5")
+        self.requires("imgui/1.92.0")
         self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface
         
 
