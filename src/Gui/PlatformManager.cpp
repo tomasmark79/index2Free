@@ -521,6 +521,10 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
   io_->Fonts->AddFontFromFileTTF (fnt.string ().c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();
 
+  // Force recreation of font texture on next frame
+  // Podle komentáře z 2024-06-28 se font textura automaticky obnovuje v ImGui_ImplOpenGL3_NewFrame(). Ale musíme ji explicitně zničit, aby se obnovila
+  ImGui_ImplOpenGL3_DestroyFontsTexture ();
+
   // Always start scale from default style sizes
   ImGui::GetStyle () = defaultStyle_;
   ImGui::GetStyle ().ScaleAllSizes (scalingFactor);
