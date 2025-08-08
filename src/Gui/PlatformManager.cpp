@@ -117,7 +117,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 12; // Change this to switch between shaders
+  int currentShader = 1; // Change this to switch between shaders
 
   std::string shaderToUse;
   switch (currentShader) {
@@ -506,6 +506,7 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
   float scalingFactor = userScaleFactor;
   float fontSize = BASE_FONT_SIZE * scalingFactor * devicePixelRatio_;
   fontSize = std::max (1.0f, roundf (fontSize));
+
   ImFontConfig fontCfg = {};
   fontCfg.RasterizerDensity = scalingFactor;
   static const ImWchar czRanges[]
@@ -515,7 +516,7 @@ void PlatformManager::scaleImGui (float userScaleFactor) {
           0x040D, 0x045F, 0x040E, 0x045F, 0x040F, 0x045F, 0 };
   std::filesystem::path fnt = AssetContext::getAssetsPath () / "fonts" / "Comfortaa-Light.otf";
 
-  // ImGui::GetIO ().FontGlobalScale = scalingFactor;
+  // Clear and rebuild fonts
   io_->Fonts->Clear ();
   io_->Fonts->AddFontFromFileTTF (fnt.string ().c_str (), fontSize, &fontCfg, czRanges);
   io_->Fonts->Build ();

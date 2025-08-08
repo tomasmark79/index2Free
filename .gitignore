@@ -1,10 +1,7 @@
-/.ccache/
 /doc/html/
 /doc/latex
 /build/
-/trash/
-/docker/
 /dotnamebackup/
-Solution.log
+*.log
 CMakeUserPresets.json
 

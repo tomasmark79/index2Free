@@ -57,7 +57,11 @@ protected:
   SDL_GLContext glContext_ = nullptr;
   SDL_Window* window_ = nullptr;
   GLuint vao_, vbo_, ebo_, shaderProgram_;
+
+private:
   ImGuiContext* imguiContext_ = nullptr;
+
+public:
   ImGuiIO* io_;
 
   ImGuiStyle defaultStyle_, style_;

@@ -2788,7 +2788,7 @@ DIR_GRAPH_MAX_DEPTH    = 1
 # with INTERACTIVE_SVG (the INTERACTIVE_SVG will be set to NO).
 # Possible values are: png, jpg, gif, svg, png:gd, png:gd:gd, png:cairo,
 # png:cairo:gd, png:cairo:cairo, png:cairo:gdiplus, png:gdiplus,
-# png:gdiplus:gdiplus, svg:cairo, svg:cairo:cairo, svg:svg, svg:svg:corelib,
+# png:gdiplus:gdiplus, svg:cairo, svg:cairo:cairo, svg:svg, svg:svg:core,
 # gif:cairo, gif:cairo:gd, gif:cairo:gdiplus, gif:gdiplus, gif:gdiplus:gdiplus,
 # gif:gd, gif:gd:gd, jpg:cairo, jpg:cairo:gd, jpg:cairo:gdiplus, jpg:gd,
 # jpg:gd:gd, jpg:gdiplus and jpg:gdiplus:gdiplus.
@@ -2797,7 +2797,7 @@ DIR_GRAPH_MAX_DEPTH    = 1
 
 DOT_IMAGE_FORMAT       = svg
 
-# If DOT_IMAGE_FORMAT is set to svg or svg:svg or svg:svg:corelib, then this option
+# If DOT_IMAGE_FORMAT is set to svg or svg:svg or svg:svg:core, then this option
 # can be set to YES to enable generation of interactive SVG images that allow
 # zooming and panning.
 #

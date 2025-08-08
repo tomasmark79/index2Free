@@ -76,9 +76,10 @@ class ProjectTemplateRecipe(ConanFile):
         self.requires("glm/1.0.1")
         self.requires("imgui/1.91.5")
         self.requires("libffi/3.4.8", override=True)  # Foreign Function Interface
-        self.requires("glew/2.2.0")
+        
 
         if self.settings.os != "Emscripten":
+            self.requires("glew/2.2.0")
             self.requires("sdl/2.32.2", override=True)  # Latest stable SDL version
             self.requires("sdl_image/2.8.2")
             self.requires("sdl_ttf/2.24.0")

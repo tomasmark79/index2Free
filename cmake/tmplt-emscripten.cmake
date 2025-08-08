@@ -47,6 +47,7 @@ function(emscripten target isHtml reqPthreads customPrePath)
     set(EMCC_FLAGS_SDL2_MIXER "-s USE_SDL_MIXER=2")
     set(EMCC_FLAGS_ASYNCIFY "-s ASYNCIFY")
     set(EMCC_FLAGS_MEMORY "-s ALLOW_MEMORY_GROWTH=1")
+    set(EMCC_FLAGS_EXCEPTIONS "-sNO_DISABLE_EXCEPTION_CATCHING")
 
     # Future flags (not used yet)
     # set(EMCC_FLAGS_GL_PROC "-s GL_ENABLE_GET_PROC_ADDRESS=1")
@@ -81,6 +82,7 @@ function(emscripten target isHtml reqPthreads customPrePath)
         ${EMCC_FLAGS_SDL2_IMAGE}
         ${EMCC_FLAGS_SDL2_TTF}
         ${EMCC_FLAGS_SDL2_MIXER}
+        ${EMCC_FLAGS_EXCEPTIONS}
     )
     string(JOIN " " COMPILE_FLAGS_STRING ${COMPILE_FLAGS_LIST})
 
@@ -97,6 +99,7 @@ function(emscripten target isHtml reqPthreads customPrePath)
         ${EMCC_FLAGS_SDL2_IMAGE}
         ${EMCC_FLAGS_SDL2_TTF}
         ${EMCC_FLAGS_SDL2_MIXER}
+        ${EMCC_FLAGS_EXCEPTIONS}
         ${customPrePath}
         ${customHtmlPath}
     )
@@ -107,6 +110,9 @@ function(emscripten target isHtml reqPthreads customPrePath)
         COMPILE_FLAGS "${COMPILE_FLAGS_STRING}"
         LINK_FLAGS "${LINK_FLAGS_STRING}"
     )
+
+    # Note: Assets are now accessed only through Emscripten virtual filesystem
+    # No redundant copying needed - HTML loads assets via FS.readFile()
 
     # macOS specific frameworks (only required on macOS)
     if(APPLE)

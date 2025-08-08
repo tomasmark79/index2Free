@@ -353,8 +353,7 @@ namespace DotNameUtils {
       return result;
     }
 
-    // Just for debugging purposes
-    // (Author, Email, Phone, Website)
+    // get Author, Email, Phone, Website, GitHub, ...
     inline std::string getCustomStringSign () {
       std::string result;
       try {
@@ -364,6 +363,9 @@ namespace DotNameUtils {
         auto email = getEmail (customStrings, "Email");
         auto phone = getTel (customStrings, "Phone");
         auto website = getUrl (customStrings, "Website");
+        auto github = getUrl (customStrings, "GitHub");
+        auto linkedin = getUrl (customStrings, "LinkedIn");
+        auto discord = getUrl (customStrings, "Discord");
 
         if (email)
           result += "Email: " + *email + "\n";
@@ -376,9 +378,24 @@ namespace DotNameUtils {
           result += "No phone provided.\n";
 
         if (website)
-          result += "Website: " + *website;
+          result += "Website: " + *website + "\n";
         else
-          result += "No website provided.";
+          result += "No website provided.\n";
+
+        if (github)
+          result += "GitHub: " + *github + "\n";
+        else
+          result += "No GitHub provided.\n";
+
+        if (linkedin)
+          result += "LinkedIn: " + *linkedin + "\n";
+        else
+          result += "No LinkedIn provided.\n";
+
+        if (discord)
+          result += "Discord: " + *discord;
+        else
+          result += "No Discord provided.";
 
       } catch (const std::exception& e) {
         result = "Error loading custom strings: " + std::string (e.what ());

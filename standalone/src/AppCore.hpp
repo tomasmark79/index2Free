@@ -112,10 +112,13 @@ int runApp (int argc, const char* argv[]) {
     return 1;
   }
 
-  // Performance::simpleCpuBenchmark ();
+  // Performance::simpleCpuBenchmark (); // default is off
 
-  // I know it is smartpointer, but we need to free it before exit scope bracelet
+  // I know it is smartpointer, but ... why not
   uniqueLib = nullptr;
+
+  // demo error
+  LOG_E_STREAM << "This is a demo error message" << std::endl;
 
   // bye
   LOG_I_STREAM << "Sucessfully exited " << AppContext::standaloneName << std::endl;
