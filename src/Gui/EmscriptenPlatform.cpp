@@ -140,11 +140,11 @@ void EmscriptenPlatform::initialize () {
       this, 0, isInfiniteLoop);
 }
 
-int EmscriptenPlatform::getShaderTarget() {
+int EmscriptenPlatform::getShaderTarget () {
   if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
-    return static_cast<int>(ShaderTarget::WebGL2);
+    return static_cast<int> (ShaderTarget::WebGL2);
   } else {
-    return static_cast<int>(ShaderTarget::WebGL1);
+    return static_cast<int> (ShaderTarget::WebGL1);
   }
 }
 
@@ -178,12 +178,7 @@ void EmscriptenPlatform::mainLoop () {
   ImGui_ImplSDL2_NewFrame ();
   ImGui::NewFrame ();
 
-  if (showDemo_)
-    ImGui::ShowDemoWindow (&showDemo_);
-
-  if (showOverlay_) {
-    printOverlayWindow ();
-  }
+  this->buildImguiContent ();
 
   ImGui::Render ();
   glViewport (0, 0, windowWidth_, windowHeight_);

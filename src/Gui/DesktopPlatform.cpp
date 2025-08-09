@@ -48,12 +48,7 @@ void DesktopPlatform::mainLoop () {
     ImGui_ImplSDL2_NewFrame ();
     ImGui::NewFrame ();
 
-    if (showDemo_)
-      ImGui::ShowDemoWindow (&showDemo_);
-
-    if (showOverlay_) {
-      printOverlayWindow ();
-    }
+    this->buildImguiContent ();
 
     ImGui::Render ();
     glViewport (0, 0, windowWidth_, windowHeight_);

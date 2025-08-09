@@ -116,7 +116,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 }
 
 void PlatformManager::setupShaders () {
-  int currentShader = 0;
+  int currentShader = 14;
   std::string shaderToUse;
   switch (currentShader) {
   case 0:
@@ -127,7 +127,7 @@ void PlatformManager::setupShaders () {
     break;
   case 2:
     shaderToUse = fragmentShaderToySynthwave;
-    break;
+    break;  
   case 3:
     shaderToUse = fragmentShaderToyGlasscube;
     break;
@@ -632,13 +632,13 @@ void PlatformManager::printOverlayWindow () {
   ImGui::Text ("%s", cachedOverlayContent.c_str ());
 
   // Add separator and test button
-  ImGui::Separator ();
-  if (ImGui::Button ("🔍 Test All Shader Conversions")) {
-    testAllShaderConversions ();
-  }
-  if (ImGui::IsItemHovered ()) {
-    ImGui::SetTooltip ("Convert all shaders to all targets and save results to files");
-  }
+  // ImGui::Separator ();
+  // if (ImGui::Button ("🔍 Test All Shader Conversions")) {
+  //   testAllShaderConversions ();
+  // }
+  // if (ImGui::IsItemHovered ()) {
+  //   ImGui::SetTooltip ("Convert all shaders to all targets and save results to files");
+  // }
 
   ImGui::End ();
   ImGui::PopID ();
@@ -730,7 +730,6 @@ int PlatformManager::getShaderTarget () {
 #endif
 }
 
-// Test function to convert and save all shaders for verification
 void PlatformManager::testAllShaderConversions () {
   LOG_I_STREAM << "Starting shader conversion test for all available shaders..." << std::endl;
 
@@ -855,4 +854,14 @@ void PlatformManager::testAllShaderConversions () {
   LOG_I_STREAM << "Failed Conversions: " << (totalTests - successfulTests) << std::endl;
   LOG_I_STREAM << "Success Rate: " << (successfulTests * 100.0f / totalTests) << "%" << std::endl;
   LOG_I_STREAM << "All conversion results saved to test_*.glsl and test_*.txt files" << std::endl;
+}
+
+// Draw custom ImGui content (windows, etc.)
+void PlatformManager::buildImguiContent () {
+  if (showDemo_)
+    ImGui::ShowDemoWindow (&showDemo_);
+
+  if (showOverlay_) {
+    printOverlayWindow ();
+  }
 }

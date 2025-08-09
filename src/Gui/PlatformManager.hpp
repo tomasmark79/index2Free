@@ -89,9 +89,10 @@ protected:
   void initializeImGui ();
   virtual void decideOpenGLVersionForEmscripten () {};
   void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
-  
+
   virtual void mainLoop () {};
-  
+  void buildImguiContent ();
+
   void scaleImGui (float userScaleFactor = 1.0f);
 
   // Debug/testing functions

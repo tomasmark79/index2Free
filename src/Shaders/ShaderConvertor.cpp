@@ -172,12 +172,12 @@ std::string ShaderConvertor::addMissingDefines (const std::string& code, ShaderT
   std::string defines;
 
   // Detekce chybějících definic
-  std::vector<std::pair<std::string, std::string>> commonDefines = {
-    {"HW_PERFORMANCE", "1"},  // Default pro WebGL2/Desktop, 0 pro WebGL1
-    {"AA", "1"},             // Anti-aliasing level
-    {"CHEAP_NORMALS", "0"},  // Použít levnější výpočet normál
-    {"LOW_QUALITY", "0"},    // Nízká kvalita pro mobilní zařízení
-    {"HIGH_QUALITY", "1"}    // Vysoká kvalita pro desktop
+  std::vector<std::pair<std::string, std::string> > commonDefines = {
+    { "HW_PERFORMANCE", "1" }, // Default pro WebGL2/Desktop, 0 pro WebGL1
+    { "AA", "1" },             // Anti-aliasing level
+    { "CHEAP_NORMALS", "0" },  // Použít levnější výpočet normál
+    { "LOW_QUALITY", "0" },    // Nízká kvalita pro mobilní zařízení
+    { "HIGH_QUALITY", "1" }    // Vysoká kvalita pro desktop
   };
 
   // Upravit defaults podle target platformy
@@ -190,19 +190,19 @@ std::string ShaderConvertor::addMissingDefines (const std::string& code, ShaderT
   // Přidat definice pouze pokud nejsou už definované
   for (const auto& define : commonDefines) {
     std::string definePattern = "#define\\s+" + define.first + "\\s";
-    std::regex defineRegex(definePattern);
-    
+    std::regex defineRegex (definePattern);
+
     // Také zkontroluj použití v #if direktivách
     std::string usagePattern = "#if.*" + define.first;
-    std::regex usageRegex(usagePattern);
-    
-    if ((std::regex_search(code, usageRegex) || code.find(define.first) != std::string::npos)
-        && !std::regex_search(code, defineRegex)) {
+    std::regex usageRegex (usagePattern);
+
+    if ((std::regex_search (code, usageRegex) || code.find (define.first) != std::string::npos)
+        && !std::regex_search (code, defineRegex)) {
       defines += "#define " + define.first + " " + define.second + "\n";
     }
   }
 
-  if (!defines.empty()) {
+  if (!defines.empty ()) {
     defines = "// Auto-generated defines\n" + defines + "\n";
   }
 
