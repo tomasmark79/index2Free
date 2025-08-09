@@ -1,6 +1,6 @@
 [![Linux](https://github.com/tomasmark79/index2/actions/workflows/linux.yml/badge.svg)](https://github.com/tomasmark79/index2/actions/workflows/linux.yml)
 [![MacOS](https://github.com/tomasmark79/index2/actions/workflows/macos.yml/badge.svg)](https://github.com/tomasmark79/index2/actions/workflows/macos.yml)
-[![Windows](https://github.com/tomasmark79/index2/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/index2/actions/workflows/windows.yml)
+<!-- [![Windows](https://github.com/tomasmark79/index2/actions/workflows/windows.yml/badge.svg)](https://github.com/tomasmark79/index2/actions/workflows/windows.yml) -->
 
 ## Index2
 
