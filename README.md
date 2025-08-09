@@ -4,32 +4,63 @@
 
 ## Index2
 
-## Refactored public release of C++ Portfolio Website  
-# [digitalspace.name](https://digitalspace.name/new/index.html)  
-
->refactored 80%
+>refactored 90%
 
 Examples from development 
 
-[remove free suffix from the link]  
-https://digitalspace.name/new/oop1/index2Free.html  
-https://digitalspace.name/new/oop2/index2Free.html  
-https://digitalspace.name/new/oop3/index2Free.html  
-
 ## ToDo
-- fragment shaders convertor to WebGL1
-- fragment shaders convertor to WebGL2
-- shader switcher on the fly (more vertex & fragment shaders builtin)
+- shader switcher on the fly
+- ImGui theme switcher on the fly (more themes builtin)
 - window position (centered, corners, etc.)
 - audio implementation + audio player
-- ImGui theme switcher on the fly (more themes builtin)
-- build window structure from json declaration
 - fx for printed text within windows (typewriter, etc.)
 - collect licenses from 3rd party shaders
-- ~~raspberry PI4/5 aarch64 compilaboloty~~
-- ~~Linux x86_64, Windows x64, Wasm Emscripten ready~~
-- ~~fragment shaders convertor to Desktop OpenGL~~
-- ~~scaling ui on the fly with + - keys~~
+- build window structure from json declaration
+
+## Live Show Previews   
+
+https://digitalspace.name/dotnamecpp/i2/happyjumping/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/happyjumping/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/seascape/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/seascape/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/synthwave/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/synthwave/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/glasscube/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/glasscube/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/singularity/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/singularity/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/fractaltrees/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/fractaltrees/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/fireflame/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/fireflame/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/tunnel/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/tunnel/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/sunset/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/sunset/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/sunset2/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/sunset2/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/anothercube/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/anothercube/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/abug/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/abug/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/bluemoonocean/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/bluemoonocean/release/index2Free.html
+
+https://digitalspace.name/dotnamecpp/i2/bubbles/debug/index2Free.html
+https://digitalspace.name/dotnamecpp/i2/bubbles/release/index2Free.html
+
 
 ## License
 
