@@ -5,10 +5,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
-enum class WebGLVersion {
-  WEBGL1 = 1,
-  WEBGL2 = 2
-};
+enum class WebGLVersion { WEBGL1 = 1, WEBGL2 = 2 };
 
 class EmscriptenPlatform : public PlatformManager {
 
@@ -20,9 +17,9 @@ public:
 
 protected:
   virtual void updateWindowSize () override;
-  virtual void decideOpenGLVersionForEmscripten () override;
-  WebGLVersion detectWebGLVersion();
-  void logWebGLInfo(WebGLVersion version);
+  void decideOpenGLVersionForEmscripten ();
+  WebGLVersion detectWebGLVersion ();
+  void logWebGLInfo (WebGLVersion version);
 
 private:
   WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;

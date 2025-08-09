@@ -117,7 +117,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 2  ; // Change this to switch between shaders
+  int currentShader = 2; // Change this to switch between shaders
 
   std::string shaderToUse;
   switch (currentShader) {
@@ -290,7 +290,7 @@ GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderTy
 void PlatformManager::decideOpenGLVersion () {
 #if defined(__EMSCRIPTEN__)
   // Call the Emscripten-specific version that can decide based on runtime detection
-  decideOpenGLVersionForEmscripten();
+  decideOpenGLVersionForEmscripten ();
 #elif defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100 (WebGL 1.0)
   glsl_version_ = "#version 100";
@@ -489,6 +489,17 @@ void PlatformManager::mainLoop () {
     glViewport (0, 0, windowWidth_, windowHeight_);
     glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // 30fps
+    static const int targetFramerate = 30;
+    static const int frameDelay = 1000 / targetFramerate;
+    static unsigned int lastFrameTime = SDL_GetTicks ();
+
+    unsigned int currentFrameTime = SDL_GetTicks ();
+    if (currentFrameTime - lastFrameTime < frameDelay) {
+      SDL_Delay (frameDelay - (currentFrameTime - lastFrameTime));
+    }
+    lastFrameTime = SDL_GetTicks ();
 
     // Render background shader - cumulative time
     static float totalTime = 0.0f;
@@ -767,16 +778,15 @@ void PlatformManager::handleError (const char* message, int errorCode) const {
   LOG_E_FMT ("%s: %d", message, errorCode);
 };
 
-// Virtual method to get shader target - returns the appropriate ShaderTarget enum value
-int PlatformManager::getShaderTarget() {
-  // Determine target platform based on OpenGL version
+// returns the appropriate ShaderTarget enum value
+int PlatformManager::getShaderTarget () {
 #if defined(IMGUI_IMPL_OPENGL_ES2)
-  return static_cast<int>(ShaderTarget::WebGL1);
+  return static_cast<int> (ShaderTarget::WebGL1);
 #elif defined(IMGUI_IMPL_OPENGL_ES3)
-  return static_cast<int>(ShaderTarget::WebGL2);
+  return static_cast<int> (ShaderTarget::WebGL2);
 #elif defined(__APPLE__)
-  return static_cast<int>(ShaderTarget::Desktop330);
+  return static_cast<int> (ShaderTarget::Desktop330);
 #else
-  return static_cast<int>(ShaderTarget::Desktop330);
+  return static_cast<int> (ShaderTarget::Desktop330);
 #endif
 };

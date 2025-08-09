@@ -81,8 +81,7 @@ protected:
   void setupShaders ();
   GLuint compileShader (const char* shaderSource, GLenum shaderType);
   void decideOpenGLVersion ();
-  virtual void decideOpenGLVersionForEmscripten () {}; // Virtual method for Emscripten-specific logic
-  virtual int getShaderTarget (); // Virtual method to get shader target
+  virtual int getShaderTarget ();
   void setupQuad ();
   void initializeImGui ();
   void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
