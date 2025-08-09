@@ -117,7 +117,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
   // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 2; // Change this to switch between shaders
+  int currentShader = 2  ; // Change this to switch between shaders
 
   std::string shaderToUse;
   switch (currentShader) {
@@ -288,7 +288,10 @@ GLuint PlatformManager::compileShader (const char* shaderSource, GLenum shaderTy
 
 // Decide OpenGL version based on platform and settings
 void PlatformManager::decideOpenGLVersion () {
-#if defined(IMGUI_IMPL_OPENGL_ES2)
+#if defined(__EMSCRIPTEN__)
+  // Call the Emscripten-specific version that can decide based on runtime detection
+  decideOpenGLVersionForEmscripten();
+#elif defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100 (WebGL 1.0)
   glsl_version_ = "#version 100";
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, 0);
@@ -762,4 +765,18 @@ void PlatformManager::handleError (const char* message, const char* error) const
 
 void PlatformManager::handleError (const char* message, int errorCode) const {
   LOG_E_FMT ("%s: %d", message, errorCode);
+};
+
+// Virtual method to get shader target - returns the appropriate ShaderTarget enum value
+int PlatformManager::getShaderTarget() {
+  // Determine target platform based on OpenGL version
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+  return static_cast<int>(ShaderTarget::WebGL1);
+#elif defined(IMGUI_IMPL_OPENGL_ES3)
+  return static_cast<int>(ShaderTarget::WebGL2);
+#elif defined(__APPLE__)
+  return static_cast<int>(ShaderTarget::Desktop330);
+#else
+  return static_cast<int>(ShaderTarget::Desktop330);
+#endif
 };
