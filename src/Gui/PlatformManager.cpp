@@ -36,6 +36,8 @@ static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #include <Shaders/Shadertoy/Bluemoonocean.hpp>
 #include <Shaders/Shadertoy/WebGL2Test.hpp>
 #include <Shaders/Shadertoy/Bubbles.hpp>
+#include <Shaders/Shadertoy/Chainy.hpp>
+#include <Shaders/Shadertoy/Dyinguniverse.hpp>
 
 // Function to initialize the platform
 void initializePlatform () {
@@ -116,7 +118,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 }
 
 void PlatformManager::setupShaders () {
-  int currentShader = 14;
+  int currentShader = 15;
   std::string shaderToUse;
   switch (currentShader) {
   case 0:
@@ -127,7 +129,7 @@ void PlatformManager::setupShaders () {
     break;
   case 2:
     shaderToUse = fragmentShaderToySynthwave;
-    break;  
+    break;
   case 3:
     shaderToUse = fragmentShaderToyGlasscube;
     break;
@@ -163,6 +165,12 @@ void PlatformManager::setupShaders () {
     break;
   case 14:
     shaderToUse = fragmentShaderToyBubbles;
+    break;
+  case 15:
+    shaderToUse = fragmentShaderToyChainy;
+    break;
+  case 16:
+    shaderToUse = fragmentShaderToyDyingUniverse;
     break;
 
   default:

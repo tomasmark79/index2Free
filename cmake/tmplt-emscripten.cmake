@@ -71,7 +71,8 @@ function(emscripten target isHtml reqPthreads customPrePath)
     if(target MATCHES "LibTester")
         set(customHtmlPath "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/../../assets/ems-mini.html")
     else()
-        set(customHtmlPath "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ems-mini.html")
+        #set(customHtmlPath "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ems-mini.html")
+        set(customHtmlPath "--shell-file ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ems-mini-nologo-noconsole.html")
     endif()
 
     # Build compile flags
