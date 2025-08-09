@@ -88,6 +88,9 @@ protected:
   void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
   void mainLoop ();
   void scaleImGui (float userScaleFactor = 1.0f);
+
+  // Debug/testing functions
+  void testAllShaderConversions (); // Test all shaders and save to files
   void renderBackground (float deltaTime);
   std::string getOverlayContent ();
   void printOverlayWindow ();

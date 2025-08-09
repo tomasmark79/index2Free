@@ -30,16 +30,19 @@ ShaderConversionResult ShaderConvertor::convertFromShaderToy (const std::string&
     // 4. Přidání uniformů (včetně detekovaných texture kanálů)
     fragmentCode += convertUniforms (shaderToyCode, target, analysis);
 
-    // 5. Konverze ShaderToy built-ins
+    // 5. Přidání chybějících definic
+    fragmentCode += addMissingDefines (shaderToyCode, target);
+
+    // 6. Konverze ShaderToy built-ins
     std::string processedCode = convertShaderToyBuiltins (shaderToyCode, target);
 
-    // 6. Konverze mainImage funkce
+    // 7. Konverze mainImage funkce
     processedCode = convertMainFunction (processedCode, target);
 
-    // 7. Oprava kompatibility funkcí
+    // 8. Oprava kompatibility funkcí
     processedCode = fixCompatibilityIssues (processedCode, target);
 
-    // 8. Finální úpravy podle analýzy
+    // 9. Finální úpravy podle analýzy
     processedCode = applyAnalysisBasedFixes (processedCode, analysis, target);
 
     fragmentCode += processedCode;
@@ -163,6 +166,47 @@ std::string ShaderConvertor::convertUniforms (const std::string& code, ShaderTar
   }
 
   return uniforms;
+}
+
+std::string ShaderConvertor::addMissingDefines (const std::string& code, ShaderTarget target) {
+  std::string defines;
+
+  // Detekce chybějících definic
+  std::vector<std::pair<std::string, std::string>> commonDefines = {
+    {"HW_PERFORMANCE", "1"},  // Default pro WebGL2/Desktop, 0 pro WebGL1
+    {"AA", "1"},             // Anti-aliasing level
+    {"CHEAP_NORMALS", "0"},  // Použít levnější výpočet normál
+    {"LOW_QUALITY", "0"},    // Nízká kvalita pro mobilní zařízení
+    {"HIGH_QUALITY", "1"}    // Vysoká kvalita pro desktop
+  };
+
+  // Upravit defaults podle target platformy
+  if (target == ShaderTarget::WebGL1) {
+    commonDefines[0].second = "0"; // HW_PERFORMANCE = 0 pro WebGL1
+    commonDefines[3].second = "1"; // LOW_QUALITY = 1 pro WebGL1
+    commonDefines[4].second = "0"; // HIGH_QUALITY = 0 pro WebGL1
+  }
+
+  // Přidat definice pouze pokud nejsou už definované
+  for (const auto& define : commonDefines) {
+    std::string definePattern = "#define\\s+" + define.first + "\\s";
+    std::regex defineRegex(definePattern);
+    
+    // Také zkontroluj použití v #if direktivách
+    std::string usagePattern = "#if.*" + define.first;
+    std::regex usageRegex(usagePattern);
+    
+    if ((std::regex_search(code, usageRegex) || code.find(define.first) != std::string::npos)
+        && !std::regex_search(code, defineRegex)) {
+      defines += "#define " + define.first + " " + define.second + "\n";
+    }
+  }
+
+  if (!defines.empty()) {
+    defines = "// Auto-generated defines\n" + defines + "\n";
+  }
+
+  return defines;
 }
 
 std::string ShaderConvertor::convertMainFunction (const std::string& code, ShaderTarget target) {

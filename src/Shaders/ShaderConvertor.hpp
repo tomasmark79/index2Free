@@ -92,6 +92,9 @@ private:
   std::string convertUniforms (const std::string& code, ShaderTarget target,
                                const ShaderAnalysis& analysis);
 
+  // Přidání chybějících definic (defines)
+  std::string addMissingDefines (const std::string& code, ShaderTarget target);
+
   // Konverze main funkce a výstupu
   std::string convertMainFunction (const std::string& code, ShaderTarget target);
 
