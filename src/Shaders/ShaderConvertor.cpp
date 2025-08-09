@@ -6,6 +6,8 @@
 
 ShaderConvertor::ShaderConvertor () {
   initializeFunctionReplacements ();
+  initializeSupportedFunctions ();
+  initializeBuiltinReplacements ();
 }
 
 ShaderConvertor::~ShaderConvertor () {
@@ -186,6 +188,7 @@ std::string ShaderConvertor::convertMainFunction (const std::string& code, Shade
   if (target == ShaderTarget::WebGL1) {
     coordSource = "vFragCoord * iResolution.xy";
   } else {
+    // WebGL2, Desktop - používají gl_FragCoord.xy přímo
     coordSource = "gl_FragCoord.xy";
   }
 
@@ -285,9 +288,31 @@ std::string ShaderConvertor::fixWebGL1Issues (const std::string& code) {
 std::string ShaderConvertor::fixWebGL2Issues (const std::string& code) {
   std::string result = code;
 
-  // WebGL2 má méně problémů, ale některé věci stále potřebují úpravu
-  // Většinou jen ověření, že texture2D() je nahrazeno za texture()
+  // WebGL2 základní konverze
   result = replaceAll (result, "texture2D(", "texture(");
+  result = replaceAll (result, "textureCube(", "texture(");
+  result = replaceAll (result, "texture2DLod(", "textureLod(");
+  result = replaceAll (result, "textureCubeLod(", "textureLod(");
+
+  // Built-in proměnné konverze
+  // gl_FragColor → vlastní out proměnná (už řešeno v convertMainFunction)
+
+  // Precision kvalifikátory pro texture funkce
+  result = replaceAll (result, "texture(", "texture("); // Už správně
+
+  // Oprava pro některé extension-specific funkce
+  result = replaceAll (result, "dFdx(", "dFdx(");
+  result = replaceAll (result, "dFdy(", "dFdy(");
+  result = replaceAll (result, "fwidth(", "fwidth(");
+
+  // Konverze attribute/varying na in/out (pokud ještě existují)
+  result = replaceAll (result, "attribute ", "in ");
+  result = replaceAll (result, "varying ", ""); // Odstraněné, protože je to fragment shader
+
+  // Konverze gl_FragCoord a dalších built-ins zůstávají stejné
+
+  // WebGL2 specifické optimalizace
+  // Ověření, že používáme správné GLSL ES 3.0 funkce
 
   return result;
 }
@@ -410,12 +435,52 @@ void ShaderConvertor::initializeFunctionReplacements () {
   functionReplacements[ShaderTarget::WebGL1]["textureSize"] = "textureSize2D";
   functionReplacements[ShaderTarget::WebGL1]["inverse"] = "matrixInverse";
   functionReplacements[ShaderTarget::WebGL1]["transpose"] = "matrixTranspose";
+  functionReplacements[ShaderTarget::WebGL1]["texture"] = "texture2D";
 
-  // WebGL2 má méně náhrad
+  // WebGL2 náhrady (OpenGL ES 3.0)
   functionReplacements[ShaderTarget::WebGL2]["texture2D"] = "texture";
+  functionReplacements[ShaderTarget::WebGL2]["textureCube"] = "texture";
+  functionReplacements[ShaderTarget::WebGL2]["texture2DLod"] = "textureLod";
+  functionReplacements[ShaderTarget::WebGL2]["textureCubeLod"] = "textureLod";
+  functionReplacements[ShaderTarget::WebGL2]["texture2DGrad"] = "textureGrad";
+  functionReplacements[ShaderTarget::WebGL2]["textureCubeGrad"] = "textureGrad";
 
   // Desktop náhrady jsou minimální
   // Většinou není potřeba žádných náhrad pro moderní OpenGL
+}
+
+void ShaderConvertor::initializeSupportedFunctions () {
+  // WebGL1 podporované funkce (OpenGL ES 2.0)
+  supportedFunctions[ShaderTarget::WebGL1]
+      = { "sin",    "cos",       "tan",     "asin",    "acos",      "atan",       "pow",   "exp",
+          "log",    "sqrt",      "abs",     "sign",    "floor",     "ceil",       "fract", "mod",
+          "min",    "max",       "clamp",   "mix",     "step",      "smoothstep", "dot",   "cross",
+          "length", "normalize", "reflect", "refract", "texture2D", "textureCube" };
+
+  // WebGL2 podporované funkce (OpenGL ES 3.0)
+  supportedFunctions[ShaderTarget::WebGL2]
+      = { "sin",         "cos",         "tan",     "asin",       "acos",    "atan",
+          "pow",         "exp",         "log",     "sqrt",       "abs",     "sign",
+          "floor",       "ceil",        "fract",   "mod",        "min",     "max",
+          "clamp",       "mix",         "step",    "smoothstep", "dot",     "cross",
+          "length",      "normalize",   "reflect", "refract",    "texture", "textureLod",
+          "textureSize", "textureGrad", "dFdx",    "dFdy",       "fwidth",  "inverse",
+          "transpose",   "determinant" };
+
+  // Desktop podporované funkce (více funkcí)
+  supportedFunctions[ShaderTarget::Desktop330] = supportedFunctions[ShaderTarget::WebGL2];
+  supportedFunctions[ShaderTarget::Desktop420] = supportedFunctions[ShaderTarget::WebGL2];
+}
+
+void ShaderConvertor::initializeBuiltinReplacements () {
+  // WebGL1 built-in náhrady
+  builtinReplacements[ShaderTarget::WebGL1]["gl_FragCoord"]
+      = "vec4(vFragCoord * iResolution.xy, 0.0, 1.0)";
+
+  // WebGL2 built-in náhrady (většinou žádné)
+  // gl_FragCoord funguje přímo v WebGL2
+
+  // Desktop built-in náhrady (většinou žádné)
 }
 
 // === ADDITIONAL UTILITY METHODS ===

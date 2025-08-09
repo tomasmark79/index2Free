@@ -1,6 +1,7 @@
 #include "EmscriptenPlatform.hpp"
 
 #include "Logger/Logger.hpp"
+#include "../Shaders/ShaderConvertor.hpp" // Pro ShaderTarget enum
 
 #include <emscripten.h>
 #include <emscripten/html5.h>
@@ -137,6 +138,15 @@ void EmscriptenPlatform::initialize () {
         platform->mainLoop ();
       },
       this, 0, isInfiniteLoop);
+}
+
+int EmscriptenPlatform::getShaderTarget() {
+  // Dynamické rozhodnutí podle detekované WebGL verze
+  if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
+    return static_cast<int>(ShaderTarget::WebGL2);
+  } else {
+    return static_cast<int>(ShaderTarget::WebGL1);
+  }
 }
 
 void EmscriptenPlatform::updateWindowSize () {

@@ -35,6 +35,7 @@ bool showOverlay = true;
 #include <Shaders/Shadertoy/Anothercube.hpp>
 #include <Shaders/Shadertoy/Abug.hpp>
 #include <Shaders/Shadertoy/Bluemoonocean.hpp>
+#include <Shaders/Shadertoy/WebGL2Test.hpp>
 
 // Function to initialize the platform
 void initializePlatform () {
@@ -116,8 +117,8 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 
 // Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
-  // Simple shader switcher - change this number to switch shaders (0-9)
-  int currentShader = 2; // Change this to switch between shaders
+  // Simple shader switcher - change this number to switch shaders (0-13)
+  int currentShader = 13; // Change this to switch between shaders (13 = WebGL2Test)
 
   std::string shaderToUse;
   switch (currentShader) {
@@ -160,6 +161,9 @@ void PlatformManager::setupShaders () {
   case 12:
     shaderToUse = fragmentShaderToyBluemoonocean;
     break;
+  case 13:
+    shaderToUse = fragmentShaderToyWebGL2Test;
+    break;
 
   default:
     shaderToUse = fragmentShaderToyHappyjumping;
@@ -167,16 +171,7 @@ void PlatformManager::setupShaders () {
   }
 
   // Determine target platform based on OpenGL version
-  ShaderTarget target = ShaderTarget::Desktop330;
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-  target = ShaderTarget::WebGL1;
-#elif defined(IMGUI_IMPL_OPENGL_ES3)
-  target = ShaderTarget::WebGL2;
-#elif defined(__APPLE__)
-  target = ShaderTarget::Desktop330;
-#else
-  target = ShaderTarget::Desktop330;
-#endif
+  ShaderTarget target = static_cast<ShaderTarget>(getShaderTarget());
 
   // Use ShaderConvertor to convert the ShaderToy code
   ShaderConvertor convertor;

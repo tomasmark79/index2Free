@@ -14,6 +14,7 @@ public:
   ~EmscriptenPlatform () override = default;
 
   virtual void initialize () override;
+  virtual int getShaderTarget () override;
 
 protected:
   virtual void updateWindowSize () override;
