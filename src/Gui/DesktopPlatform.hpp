@@ -13,6 +13,7 @@ public:
 
 protected:
   virtual void updateWindowSize () override;
+  virtual void mainLoop () override;
 };
 
 #endif // __DESKTOPPLATFORM_H__

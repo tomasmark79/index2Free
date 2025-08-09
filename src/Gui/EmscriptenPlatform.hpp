@@ -22,6 +22,8 @@ protected:
   WebGLVersion detectWebGLVersion ();
   void logWebGLInfo (WebGLVersion version);
 
+  virtual void mainLoop () override;
+
 private:
   WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;
 };

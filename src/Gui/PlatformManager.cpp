@@ -3,6 +3,7 @@
 #include <memory>
 #include <fstream>
 #include <algorithm> // For std::min
+#include <ctime>     // For time functions
 
 #include "GuiStrings.hpp"
 #include "../Shaders/ShaderConvertor.hpp"
@@ -19,9 +20,6 @@ static std::unique_ptr<EmscriptenPlatform> gPlatform = nullptr;
   #include "DesktopPlatform.hpp"
 static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #endif
-
-bool showDemo = false;
-bool showOverlay = true;
 
 #include <Shaders/Shadertoy/Happyjumping.hpp>
 #include <Shaders/Shadertoy/Seascape.hpp>
@@ -117,12 +115,8 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 #endif
 }
 
-// Setup shaders based on the OpenGL version
 void PlatformManager::setupShaders () {
-  // Simple shader switcher - change this number to switch shaders (0-13)
-  int currentShader
-      = 14; // Change this to switch between shaders (2 = Synthwave - middle complexity)
-
+  int currentShader = 0;
   std::string shaderToUse;
   switch (currentShader) {
   case 0:
@@ -450,73 +444,6 @@ void PlatformManager::applyStyleLila (ImGuiStyle& style, float alpha) {
   colors[ImGuiCol_ModalWindowDimBg] = ImVec4 (0.05f, 0.02f, 0.12f, 0.40f * alpha);
 }
 
-// Main loop for the platform
-void PlatformManager::mainLoop () {
-  bool done = false;
-
-  // #ifdef __EMSCRIPTEN__
-  //   emscripten_set_main_loop_timing (EM_TIMING_RAF, 0);
-  // #endif
-
-  SDL_Event event;
-  while (!done) {
-    this->updateWindowSize ();
-
-    while (SDL_PollEvent (&event)) {
-      ImGui_ImplSDL2_ProcessEvent (&event);
-      done = inputHandler.processEvent (event); // own event processing
-      if (done) {
-#ifdef __EMSCRIPTEN__
-        emscripten_cancel_main_loop (); // Stop the main loop in Emscripten
-#else
-        done = true; // Stop the main loop on desktop platforms
-#endif
-      }
-    }
-
-    ImGui_ImplOpenGL3_NewFrame ();
-    ImGui_ImplSDL2_NewFrame ();
-    ImGui::NewFrame ();
-
-    if (showDemo)
-      ImGui::ShowDemoWindow (&showDemo);
-
-    if (showOverlay) {
-      printOverlayWindow ();
-    }
-
-    // Render GUI
-    ImGui::Render ();
-    glViewport (0, 0, windowWidth_, windowHeight_);
-    glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-#ifndef __EMSCRIPTEN__
-    // 30fps - in emscripten is flushing screen
-    static const int targetFramerate = 30;
-    static const int frameDelay = 1000 / targetFramerate;
-    static unsigned int lastFrameTime = SDL_GetTicks ();
-
-    unsigned int currentFrameTime = SDL_GetTicks ();
-    if (currentFrameTime - lastFrameTime < frameDelay) {
-      SDL_Delay (frameDelay - (currentFrameTime - lastFrameTime));
-    }
-    lastFrameTime = SDL_GetTicks ();
-#endif
-    // Render background shader - cumulative time
-    static float totalTime = 0.0f;
-    static unsigned int lastTime = SDL_GetTicks ();
-    unsigned int currentTime = SDL_GetTicks ();
-    float deltaTime = (currentTime - lastTime) / 1000.0f;
-    totalTime += deltaTime;
-    lastTime = currentTime;
-    renderBackground (totalTime); // Pass cumulative time, not delta
-
-    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
-    SDL_GL_SwapWindow (window_);
-  }
-}
-
 // Scale ImGui based on user-defined scale factor
 void PlatformManager::scaleImGui (float userScaleFactor) {
   float scalingFactor = userScaleFactor;
@@ -597,6 +524,16 @@ void PlatformManager::renderBackground (float totalTime) {
   // ⚡ PERFORMANCE: Statické proměnné pro frame counter
   static int frameCount = 0;
   static float lastDeltaTime = 0.016f; // Default 60 FPS
+  static Uint32 lastFrameTime = SDL_GetTicks ();
+
+  // Calculate current delta time
+  Uint32 currentFrameTime = SDL_GetTicks ();
+  if (lastFrameTime > 0) {
+    lastDeltaTime = (currentFrameTime - lastFrameTime) / 1000.0f;
+    // Clamp delta time to reasonable values to prevent large jumps
+    lastDeltaTime = std::min (lastDeltaTime, 0.1f);
+  }
+  lastFrameTime = currentFrameTime;
   frameCount++;
 
   if (iResolutionLoc != -1)
@@ -642,16 +579,6 @@ void PlatformManager::renderBackground (float totalTime) {
     glUniform1i (iChannel2Loc, 0);
   if (iChannel3Loc != -1)
     glUniform1i (iChannel3Loc, 0);
-  if (iTimeLoc != -1) {
-    glUniform1f (iTimeLoc, totalTime); // Dynamický čas pro animace
-    // glUniform1f (iTimeLoc, 5.0f); // ⚡ STATIC TIME: Completely frozen time for testing
-  }
-  if (iTimeDeltaLoc != -1)
-    glUniform1f (iTimeDeltaLoc, lastDeltaTime);
-  if (iFrameLoc != -1)
-    glUniform1i (iFrameLoc, frameCount);
-  if (iMouseLoc != -1)
-    glUniform4f (iMouseLoc, 0.0f, 0.0f, 0.0f, 0.0f);
 
   glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -703,16 +630,16 @@ void PlatformManager::printOverlayWindow () {
                                  | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
   ImGui::Begin ("Overlay", &showOverlay, windowFlags);
   ImGui::Text ("%s", cachedOverlayContent.c_str ());
-  
+
   // Add separator and test button
-  ImGui::Separator();
-  if (ImGui::Button("🔍 Test All Shader Conversions")) {
-    testAllShaderConversions();
+  ImGui::Separator ();
+  if (ImGui::Button ("🔍 Test All Shader Conversions")) {
+    testAllShaderConversions ();
   }
-  if (ImGui::IsItemHovered()) {
-    ImGui::SetTooltip("Convert all shaders to all targets and save results to files");
+  if (ImGui::IsItemHovered ()) {
+    ImGui::SetTooltip ("Convert all shaders to all targets and save results to files");
   }
-  
+
   ImGui::End ();
   ImGui::PopID ();
 }
@@ -804,105 +731,108 @@ int PlatformManager::getShaderTarget () {
 }
 
 // Test function to convert and save all shaders for verification
-void PlatformManager::testAllShaderConversions() {
+void PlatformManager::testAllShaderConversions () {
   LOG_I_STREAM << "Starting shader conversion test for all available shaders..." << std::endl;
-  
+
   // Define all available shaders with their names
   struct ShaderInfo {
     std::string name;
     std::string shaderSource;
   };
-  
-  std::vector<ShaderInfo> shaders = {
-    {"Happyjumping", fragmentShaderToyHappyjumping},
-    {"Seascape", fragmentShaderToySeascape},
-    {"Synthwave", fragmentShaderToySynthwave},
-    {"Glasscube", fragmentShaderToyGlasscube},
-    {"Singularity", fragmentShaderToySingularity},
-    {"Fractaltrees", fragmentShaderToyFractaltrees},
-    {"Fireflame", fragmentShaderToyFireflame},
-    {"Tunnel", fragmentShaderToyTunnel},
-    {"Sunset", fragmentShaderToySunset},
-    {"Sunset2", fragmentShaderToySunset2},
-    {"Anothercube", fragmentShaderToyAnothercube},
-    {"Abug", fragmentShaderToyAbug},
-    {"Bluemoonocean", fragmentShaderToyBluemoonocean},
-    {"WebGL2Test", fragmentShaderToyWebGL2Test},
-    {"Bubbles", fragmentShaderToyBubbles}
-  };
-  
+
+  std::vector<ShaderInfo> shaders = { { "Happyjumping", fragmentShaderToyHappyjumping },
+                                      { "Seascape", fragmentShaderToySeascape },
+                                      { "Synthwave", fragmentShaderToySynthwave },
+                                      { "Glasscube", fragmentShaderToyGlasscube },
+                                      { "Singularity", fragmentShaderToySingularity },
+                                      { "Fractaltrees", fragmentShaderToyFractaltrees },
+                                      { "Fireflame", fragmentShaderToyFireflame },
+                                      { "Tunnel", fragmentShaderToyTunnel },
+                                      { "Sunset", fragmentShaderToySunset },
+                                      { "Sunset2", fragmentShaderToySunset2 },
+                                      { "Anothercube", fragmentShaderToyAnothercube },
+                                      { "Abug", fragmentShaderToyAbug },
+                                      { "Bluemoonocean", fragmentShaderToyBluemoonocean },
+                                      { "WebGL2Test", fragmentShaderToyWebGL2Test },
+                                      { "Bubbles", fragmentShaderToyBubbles } };
+
   // Define all target platforms
-  std::vector<std::pair<ShaderTarget, std::string>> targets = {
-    {ShaderTarget::WebGL1, "WebGL1"},
-    {ShaderTarget::WebGL2, "WebGL2"},
-    {ShaderTarget::Desktop330, "Desktop330"},
-    {ShaderTarget::Desktop420, "Desktop420"}
-  };
-  
+  std::vector<std::pair<ShaderTarget, std::string> > targets
+      = { { ShaderTarget::WebGL1, "WebGL1" },
+          { ShaderTarget::WebGL2, "WebGL2" },
+          { ShaderTarget::Desktop330, "Desktop330" },
+          { ShaderTarget::Desktop420, "Desktop420" } };
+
   ShaderConvertor convertor;
   int totalTests = 0;
   int successfulTests = 0;
-  
+
   // Test each shader with each target
   for (const auto& shader : shaders) {
     LOG_I_STREAM << "Testing shader: " << shader.name << std::endl;
-    
+
     for (const auto& target : targets) {
       totalTests++;
       std::string filename = "test_" + shader.name + "_" + target.second + ".glsl";
-      
+
       LOG_I_STREAM << "  Converting to " << target.second << "..." << std::endl;
-      
-      ShaderConversionResult result = convertor.convertFromShaderToy(shader.shaderSource, target.first);
-      
+
+      ShaderConversionResult result
+          = convertor.convertFromShaderToy (shader.shaderSource, target.first);
+
       if (result.success) {
         successfulTests++;
-        
+
         // Save vertex shader
         std::string vertexFilename = "test_" + shader.name + "_" + target.second + "_vertex.glsl";
-        std::ofstream vertexFile(vertexFilename);
-        if (vertexFile.is_open()) {
+        std::ofstream vertexFile (vertexFilename);
+        if (vertexFile.is_open ()) {
           vertexFile << "// Vertex shader for " << shader.name << " (" << target.second << ")\n";
           vertexFile << "// Generated by ShaderConvertor test\n\n";
           vertexFile << result.vertexShader;
-          vertexFile.close();
+          vertexFile.close ();
         }
-        
+
         // Save fragment shader
-        std::string fragmentFilename = "test_" + shader.name + "_" + target.second + "_fragment.glsl";
-        std::ofstream fragmentFile(fragmentFilename);
-        if (fragmentFile.is_open()) {
-          fragmentFile << "// Fragment shader for " << shader.name << " (" << target.second << ")\n";
+        std::string fragmentFilename
+            = "test_" + shader.name + "_" + target.second + "_fragment.glsl";
+        std::ofstream fragmentFile (fragmentFilename);
+        if (fragmentFile.is_open ()) {
+          fragmentFile << "// Fragment shader for " << shader.name << " (" << target.second
+                       << ")\n";
           fragmentFile << "// Generated by ShaderConvertor test\n\n";
           fragmentFile << result.fragmentShader;
-          fragmentFile.close();
+          fragmentFile.close ();
         }
-        
+
         // Save conversion report
         std::string reportFilename = "test_" + shader.name + "_" + target.second + "_report.txt";
-        std::ofstream reportFile(reportFilename);
-        if (reportFile.is_open()) {
+        std::ofstream reportFile (reportFilename);
+        if (reportFile.is_open ()) {
           reportFile << "Shader Conversion Report\n";
           reportFile << "=======================\n";
           reportFile << "Shader Name: " << shader.name << "\n";
           reportFile << "Target Platform: " << target.second << "\n";
           reportFile << "Conversion Status: SUCCESS\n";
-          reportFile << "Original Shader Length: " << shader.shaderSource.length() << " chars\n";
-          reportFile << "Converted Vertex Shader Length: " << result.vertexShader.length() << " chars\n";
-          reportFile << "Converted Fragment Shader Length: " << result.fragmentShader.length() << " chars\n";
+          reportFile << "Original Shader Length: " << shader.shaderSource.length () << " chars\n";
+          reportFile << "Converted Vertex Shader Length: " << result.vertexShader.length ()
+                     << " chars\n";
+          reportFile << "Converted Fragment Shader Length: " << result.fragmentShader.length ()
+                     << " chars\n";
           reportFile << "\n--- Original ShaderToy Source ---\n";
           reportFile << shader.shaderSource;
-          reportFile.close();
+          reportFile.close ();
         }
-        
-        LOG_I_STREAM << "    ✅ SUCCESS - Files saved: " << vertexFilename << ", " << fragmentFilename << ", " << reportFilename << std::endl;
+
+        LOG_I_STREAM << "    ✅ SUCCESS - Files saved: " << vertexFilename << ", "
+                     << fragmentFilename << ", " << reportFilename << std::endl;
       } else {
         LOG_E_STREAM << "    ❌ FAILED - " << result.errorMessage << std::endl;
-        
+
         // Save error report
         std::string errorFilename = "test_" + shader.name + "_" + target.second + "_ERROR.txt";
-        std::ofstream errorFile(errorFilename);
-        if (errorFile.is_open()) {
+        std::ofstream errorFile (errorFilename);
+        if (errorFile.is_open ()) {
           errorFile << "Shader Conversion Error Report\n";
           errorFile << "==============================\n";
           errorFile << "Shader Name: " << shader.name << "\n";
@@ -911,13 +841,13 @@ void PlatformManager::testAllShaderConversions() {
           errorFile << "Error Message: " << result.errorMessage << "\n";
           errorFile << "\n--- Original ShaderToy Source ---\n";
           errorFile << shader.shaderSource;
-          errorFile.close();
+          errorFile.close ();
         }
       }
     }
     LOG_I_STREAM << "Completed shader: " << shader.name << std::endl;
   }
-  
+
   // Final summary
   LOG_I_STREAM << "\n=== SHADER CONVERSION TEST SUMMARY ===" << std::endl;
   LOG_I_STREAM << "Total Tests: " << totalTests << std::endl;

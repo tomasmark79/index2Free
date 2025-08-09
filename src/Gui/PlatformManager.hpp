@@ -46,6 +46,9 @@ protected:
   int windowWidth_ = DEFAULT_WINDOW_WIDTH;
   int windowHeight_ = DEFAULT_WINDOW_HEIGHT;
 
+  bool showDemo_ = false;
+  bool showOverlay_ = true;
+
 #ifdef __EMSCRIPTEN__
   float userScaleFactor = DEFAULT_SCALING_FACTOR_EMSCRIPTEN;
 #else
@@ -86,7 +89,9 @@ protected:
   void initializeImGui ();
   virtual void decideOpenGLVersionForEmscripten () {};
   void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
-  void mainLoop ();
+  
+  virtual void mainLoop () {};
+  
   void scaleImGui (float userScaleFactor = 1.0f);
 
   // Debug/testing functions

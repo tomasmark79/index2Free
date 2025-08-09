@@ -141,7 +141,6 @@ void EmscriptenPlatform::initialize () {
 }
 
 int EmscriptenPlatform::getShaderTarget() {
-  // Dynamické rozhodnutí podle detekované WebGL verze
   if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
     return static_cast<int>(ShaderTarget::WebGL2);
   } else {
@@ -159,4 +158,48 @@ void EmscriptenPlatform::updateWindowSize () {
     io_->DisplaySize = ImVec2 ((float)windowWidth_, (float)windowHeight_);
     io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
   }
+}
+
+void EmscriptenPlatform::mainLoop () {
+  // For Emscripten: Single iteration - called by emscripten_set_main_loop_arg
+  this->updateWindowSize ();
+
+  SDL_Event event;
+  while (SDL_PollEvent (&event)) {
+    ImGui_ImplSDL2_ProcessEvent (&event);
+    bool done = inputHandler.processEvent (event); // own event processing
+    if (done) {
+      emscripten_cancel_main_loop (); // Stop the main loop in Emscripten
+      return;
+    }
+  }
+
+  ImGui_ImplOpenGL3_NewFrame ();
+  ImGui_ImplSDL2_NewFrame ();
+  ImGui::NewFrame ();
+
+  if (showDemo_)
+    ImGui::ShowDemoWindow (&showDemo_);
+
+  if (showOverlay_) {
+    printOverlayWindow ();
+  }
+
+  ImGui::Render ();
+  glViewport (0, 0, windowWidth_, windowHeight_);
+  glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // Render background shader - cumulative time using SDL_GetTicks for better precision
+  static float totalTime = 0.0f;
+  static Uint32 lastTime = SDL_GetTicks ();
+  Uint32 currentTime = SDL_GetTicks ();
+
+  float deltaTime = (currentTime - lastTime) / 1000.0f;
+  totalTime += deltaTime;
+  lastTime = currentTime;
+
+  renderBackground (totalTime); // Pass cumulative time, not delta
+  ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
+  SDL_GL_SwapWindow (window_);
 }

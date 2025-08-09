@@ -30,3 +30,58 @@ void DesktopPlatform::updateWindowSize () {
     io_->DisplayFramebufferScale = ImVec2 (devicePixelRatio_, devicePixelRatio_);
   }
 }
+
+void DesktopPlatform::mainLoop () {
+  // For Desktop: Traditional game loop
+  bool done = false;
+  SDL_Event event;
+
+  while (!done) {
+    this->updateWindowSize ();
+
+    while (SDL_PollEvent (&event)) {
+      ImGui_ImplSDL2_ProcessEvent (&event);
+      done = inputHandler.processEvent (event); // own event processing
+    }
+
+    ImGui_ImplOpenGL3_NewFrame ();
+    ImGui_ImplSDL2_NewFrame ();
+    ImGui::NewFrame ();
+
+    if (showDemo_)
+      ImGui::ShowDemoWindow (&showDemo_);
+
+    if (showOverlay_) {
+      printOverlayWindow ();
+    }
+
+    ImGui::Render ();
+    glViewport (0, 0, windowWidth_, windowHeight_);
+    glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Render background shader - cumulative time
+    static float totalTime = 0.0f;
+    static Uint32 lastTime = SDL_GetTicks ();
+    Uint32 currentTime = SDL_GetTicks ();
+
+    float deltaTime = (currentTime - lastTime) / 1000.0f;
+    totalTime += deltaTime;
+    lastTime = currentTime;
+
+    renderBackground (totalTime); // Pass cumulative time, not delta
+    ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
+    SDL_GL_SwapWindow (window_);
+
+    // Frame rate limiting for desktop
+    static const int targetFramerate = 30;
+    static const int frameDelay = 1000 / targetFramerate;
+    static Uint32 lastFrameTime = SDL_GetTicks ();
+
+    Uint32 currentFrameTime = SDL_GetTicks ();
+    if (currentFrameTime - lastFrameTime < frameDelay) {
+      SDL_Delay (frameDelay - (currentFrameTime - lastFrameTime));
+    }
+    lastFrameTime = SDL_GetTicks ();
+  }
+}
