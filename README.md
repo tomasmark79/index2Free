@@ -19,6 +19,8 @@ Examples from development
 
 ## Live Show Previews   
 
+>You need GPU acceleration within your browser for the live show previews to work.
+
 https://digitalspace.name/dotnamecpp/i2/happyjumping/debug/index2Free.html
 https://digitalspace.name/dotnamecpp/i2/happyjumping/release/index2Free.html
 
