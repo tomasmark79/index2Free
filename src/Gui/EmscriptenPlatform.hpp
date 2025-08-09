@@ -17,7 +17,7 @@ public:
 
 protected:
   virtual void updateWindowSize () override;
-  void decideOpenGLVersionForEmscripten ();
+  virtual void decideOpenGLVersionForEmscripten () override;
   WebGLVersion detectWebGLVersion ();
   void logWebGLInfo (WebGLVersion version);
 

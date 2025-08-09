@@ -490,7 +490,8 @@ void PlatformManager::mainLoop () {
     glClearColor (0.45f, 0.55f, 0.60f, 1.00f);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // 30fps
+#ifndef __EMSCRIPTEN__
+    // 30fps - in emscripten is flushing screen
     static const int targetFramerate = 30;
     static const int frameDelay = 1000 / targetFramerate;
     static unsigned int lastFrameTime = SDL_GetTicks ();
@@ -500,7 +501,7 @@ void PlatformManager::mainLoop () {
       SDL_Delay (frameDelay - (currentFrameTime - lastFrameTime));
     }
     lastFrameTime = SDL_GetTicks ();
-
+#endif
     // Render background shader - cumulative time
     static float totalTime = 0.0f;
     static unsigned int lastTime = SDL_GetTicks ();

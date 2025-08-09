@@ -84,6 +84,7 @@ protected:
   virtual int getShaderTarget ();
   void setupQuad ();
   void initializeImGui ();
+  virtual void decideOpenGLVersionForEmscripten () {};
   void applyStyleLila (ImGuiStyle& style, float alpha = 1.0f);
   void mainLoop ();
   void scaleImGui (float userScaleFactor = 1.0f);
