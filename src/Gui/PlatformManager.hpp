@@ -47,7 +47,7 @@ protected:
   int windowHeight_ = DEFAULT_WINDOW_HEIGHT;
 
   bool showDemo_ = false;
-  bool showOverlay_ = false;
+  bool showOverlay_ = true;
 
 #ifdef __EMSCRIPTEN__
   float userScaleFactor = DEFAULT_SCALING_FACTOR_EMSCRIPTEN;

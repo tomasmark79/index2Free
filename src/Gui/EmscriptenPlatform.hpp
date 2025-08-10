@@ -2,8 +2,16 @@
 #define __EMSCRIPTENPLATFORM_H__
 
 #include "PlatformManager.hpp"
-#include <emscripten.h>
-#include <emscripten/html5.h>
+#include "emscripten.h"
+#include "emscripten/html5.h"
+
+struct EmscriptenDisplayInfo {
+  float devicePixelRatio;
+  int windowWidth, windowHeight;
+  bool isScaled () const;
+  float getEffectiveScale () const;
+  void update ();
+};
 
 enum class WebGLVersion { WEBGL1 = 1, WEBGL2 = 2 };
 
@@ -13,21 +21,17 @@ public:
   EmscriptenPlatform () = default;
   ~EmscriptenPlatform () override = default;
 
-  virtual void initialize () override;
-  virtual int getShaderTarget () override;
-
-protected:
-  virtual void updateWindowSize () override;
+private:
+  WebGLVersion detectWebGLVersionByJS ();
   virtual void decideOpenGLVersionForEmscripten () override;
-  WebGLVersion detectWebGLVersion ();
-  void logWebGLInfo (WebGLVersion version);
-  void checkHardwareAcceleration();
-  void createEmscriptenWebGLContext();
+  virtual void updateWindowSize () override;
 
-  virtual void mainLoop () override;
+public:
+  virtual void initialize () override;
+  WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;
 
 private:
-  WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;
+  virtual void mainLoop () override;
 };
 
 #endif // __EMSCRIPTENPLATFORM_H__
