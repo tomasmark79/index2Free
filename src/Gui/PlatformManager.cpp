@@ -119,7 +119,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 }
 
 void PlatformManager::setupShaders () {
-  int currentShader = 17;
+  int currentShader = 0;
   std::string shaderToUse;
   switch (currentShader) {
   case 0:
