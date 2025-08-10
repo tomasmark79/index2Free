@@ -41,6 +41,9 @@ function(emscripten target isHtml reqPthreads customPrePath)
     set(EMCC_FLAGS_MP3 "-s USE_SDL_MIXER=2 -s SDL2_MIXER_FORMATS='[\"mp3\"]'")
     set(EMCC_FLAGS_OPTIMIZATION "-O3")
     set(EMCC_FLAGS_WEBGL2 "-s USE_WEBGL2=1 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+    set(EMCC_FLAGS_WEBGL_ATTRS "-s WEBGL2_BACKWARDS_COMPATIBILITY_EMULATION=1")
+    set(EMCC_FLAGS_GL_CONTEXT "-s GL_ENABLE_GET_PROC_ADDRESS=1")
+    set(EMCC_FLAGS_WEBGL_EXPLICIT "-s OFFSCREEN_FRAMEBUFFER=1")
     set(EMCC_FLAGS_SDL2 "-s USE_SDL=2")
     set(EMCC_FLAGS_SDL2_IMAGE "-s USE_SDL_IMAGE=2")
     set(EMCC_FLAGS_SDL2_TTF "-s USE_SDL_TTF=2")
@@ -50,7 +53,6 @@ function(emscripten target isHtml reqPthreads customPrePath)
     set(EMCC_FLAGS_EXCEPTIONS "-sNO_DISABLE_EXCEPTION_CATCHING")
 
     # Future flags (not used yet)
-    # set(EMCC_FLAGS_GL_PROC "-s GL_ENABLE_GET_PROC_ADDRESS=1")
     # set(EMCC_FLAGS_ASSERTIONS "-s ASSERTIONS=1")
 
     # Pthread configuration
@@ -90,6 +92,9 @@ function(emscripten target isHtml reqPthreads customPrePath)
     # Build link flags
     set(LINK_FLAGS_LIST
         ${EMCC_FLAGS_WEBGL2}
+        ${EMCC_FLAGS_WEBGL_ATTRS}
+        ${EMCC_FLAGS_GL_CONTEXT}
+        ${EMCC_FLAGS_WEBGL_EXPLICIT}
         ${EMCC_FLAGS_MP3}
         ${EMCC_FLAGS_ASYNCIFY}
         ${EMCC_FLAGS_MEMORY}

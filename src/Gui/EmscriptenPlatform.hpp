@@ -21,6 +21,8 @@ protected:
   virtual void decideOpenGLVersionForEmscripten () override;
   WebGLVersion detectWebGLVersion ();
   void logWebGLInfo (WebGLVersion version);
+  void checkHardwareAcceleration();
+  void createEmscriptenWebGLContext();
 
   virtual void mainLoop () override;
 

@@ -91,8 +91,95 @@
       window.addEventListener('resize', resizeCanvas);
       resizeCanvas();
 
+      // Function to check WebGL capabilities before Module initialization
+      function checkWebGLCapabilities() {
+        const testCanvas = document.createElement('canvas');
+        
+        // Detect browser type for specific optimizations
+        const isChrome = /Chrome/.test(navigator.userAgent) && !/Chromium/.test(navigator.userAgent);
+        const isChromium = /Chromium/.test(navigator.userAgent);
+        
+        console.log('🌐 Browser detection:', {
+          isChrome: isChrome,
+          isChromium: isChromium,
+          userAgent: navigator.userAgent
+        });
+        
+        // WebGL2 context attributes optimized for hardware acceleration
+        const webgl2Attrs = {
+          alpha: false,
+          depth: true,
+          stencil: false,
+          antialias: true,
+          premultipliedAlpha: false,
+          preserveDrawingBuffer: false,
+          powerPreference: "high-performance",
+          failIfMajorPerformanceCaveat: false,
+          desynchronized: false
+        };
+        
+        const gl = testCanvas.getContext('webgl2', webgl2Attrs) || 
+                  testCanvas.getContext('webgl', webgl2Attrs) || 
+                  testCanvas.getContext('experimental-webgl', webgl2Attrs);
+        
+        if (gl) {
+          const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+          if (debugInfo) {
+            const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+            const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            console.log('🔍 GPU Vendor:', vendor);
+            console.log('🔍 GPU Renderer:', renderer);
+            
+            // Detect software rendering
+            if (renderer && (renderer.toLowerCase().includes('software') || 
+                           renderer.toLowerCase().includes('llvmpipe') ||
+                           renderer.toLowerCase().includes('mesa') ||
+                           renderer.toLowerCase().includes('swiftshader'))) {
+              console.warn('⚠️ Software rendering detected. Hardware acceleration may not be available.');
+              console.info('💡 To enable hardware acceleration in Chrome:');
+              console.info('   1. Go to chrome://settings/');
+              console.info('   2. Advanced → System');
+              console.info('   3. Enable "Use hardware acceleration when available"');
+              console.info('   4. Restart Chrome');
+              
+              // Linux-specific advice for Chrome RPM
+              if (isChrome && navigator.platform.toLowerCase().includes('linux')) {
+                console.info('🐧 Linux Chrome RPM specific fixes:');
+                console.info('   • Add user to video/render groups: sudo usermod -a -G video,render $USER');
+                console.info('   • Launch with GPU flags: google-chrome --enable-features=VaapiVideoDecoder --use-gl=egl');
+                console.info('   • Consider Chrome Flatpak or Chromium for better GPU support');
+                console.info('   • Check /dev/dri/ permissions');
+              }
+            } else {
+              console.log('✅ Hardware acceleration detected and working!');
+              
+              // Browser-specific status messages
+              if (isChrome) {
+                console.log('🟢 WebGL context created successfully. Hardware acceleration status determined by browser.');
+              } else if (isChromium) {
+                console.log('🟢 WebGL context created successfully. Hardware acceleration status determined by browser.');
+              }
+            }
+          }
+        }
+      }
+      
+      // Check capabilities before starting
+      checkWebGLCapabilities();
+
       var Module = {
         canvas: canvas,
+        // Set WebGL context attributes for better hardware acceleration
+        webglContextAttributes: {
+          alpha: false,
+          depth: true,
+          stencil: false,
+          antialias: true,
+          premultipliedAlpha: false,
+          preserveDrawingBuffer: false,
+          powerPreference: "high-performance",
+          failIfMajorPerformanceCaveat: false
+        },
         print: function(text) {
           // Capture stdout from C++ and display in console
           addToConsole(text, 'stdout');
