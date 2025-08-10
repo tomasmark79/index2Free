@@ -120,16 +120,7 @@ void EmscriptenPlatform::initialize () {
   
   // IMPORTANT: Set GLSL version BEFORE creating any OpenGL context or initializing ImGui
   decideOpenGLVersion();
-  
-  // Use native Emscripten WebGL API for better hardware acceleration support
-  createEmscriptenWebGLContext();
-  
-  // Check hardware acceleration after WebGL context is created
-  checkHardwareAcceleration();
-  
-  // Run GPU performance test
-  performGPUPerformanceTest();
-  
+    
   setupQuad ();
   setupShaders ();
   
@@ -199,58 +190,4 @@ void EmscriptenPlatform::mainLoop () {
   SDL_GL_SwapWindow (window_);
 }
 
-void EmscriptenPlatform::createEmscriptenWebGLContext() {
-#ifdef __EMSCRIPTEN__
-  LOG_I_STREAM << "🔧 Creating Emscripten WebGL context..." << std::endl;
-  
-  // Initialize WebGL context attributes with hardware acceleration preferences
-  EmscriptenWebGLContextAttributes attrs;
-  emscripten_webgl_init_context_attributes(&attrs);
-  
-  // Configure for hardware acceleration
-  attrs.alpha = false;                    // Disable alpha for better performance
-  attrs.depth = true;                     // Enable depth buffer
-  attrs.stencil = false;                  // Disable stencil buffer for better performance
-  attrs.antialias = true;                 // Enable antialiasing
-  attrs.premultipliedAlpha = false;       // Better performance
-  attrs.preserveDrawingBuffer = false;    // Better performance
-  attrs.powerPreference = EM_WEBGL_POWER_PREFERENCE_HIGH_PERFORMANCE;  // Force high-performance GPU
-  attrs.failIfMajorPerformanceCaveat = false;  // Don't fail if only software rendering available
-  attrs.majorVersion = (currentWebGLVersion_ == WebGLVersion::WEBGL2) ? 2 : 1;
-  attrs.minorVersion = 0;
-  attrs.enableExtensionsByDefault = true;  // Auto-enable compatible extensions
-  
-  LOG_I_STREAM << "🔧 WebGL context attributes:" << std::endl;
-  LOG_I_STREAM << "  - majorVersion: " << attrs.majorVersion << std::endl;
-  LOG_I_STREAM << "  - powerPreference: " << attrs.powerPreference << std::endl;
-  LOG_I_STREAM << "  - failIfMajorPerformanceCaveat: " << (attrs.failIfMajorPerformanceCaveat ? "true" : "false") << std::endl;
-  
-  // Create WebGL context on the canvas
-  EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
-  
-  if (context > 0) {
-    LOG_I_STREAM << "✅ WebGL context handle: " << context << std::endl;
-    
-    // Make the context current
-    EMSCRIPTEN_RESULT result = emscripten_webgl_make_context_current(context);
-    if (result == EMSCRIPTEN_RESULT_SUCCESS) {
-      LOG_I_STREAM << "✅ Emscripten WebGL context made current successfully" << std::endl;
-      
-      // Get actual context attributes that were created
-      EmscriptenWebGLContextAttributes actualAttrs;
-      EMSCRIPTEN_RESULT attrResult = emscripten_webgl_get_context_attributes(context, &actualAttrs);
-      if (attrResult == EMSCRIPTEN_RESULT_SUCCESS) {
-        LOG_I_STREAM << "🔍 Actual WebGL context attributes:" << std::endl;
-        LOG_I_STREAM << "  - majorVersion: " << actualAttrs.majorVersion << std::endl;
-        LOG_I_STREAM << "  - powerPreference: " << actualAttrs.powerPreference << std::endl;
-        LOG_I_STREAM << "  - failIfMajorPerformanceCaveat: " << (actualAttrs.failIfMajorPerformanceCaveat ? "true" : "false") << std::endl;
-      }
-      
-    } else {
-      LOG_E_STREAM << "❌ Failed to make Emscripten WebGL context current, result: " << result << std::endl;
-    }
-  } else {
-    LOG_E_STREAM << "❌ Failed to create Emscripten WebGL context, handle: " << context << std::endl;
-  }
-#endif
-}
+
