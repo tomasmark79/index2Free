@@ -7,13 +7,13 @@
 >refactored 90%
 
 ## ToDo
-- shader switcher on the fly
+- Shader switcher on the fly
 - ImGui theme switcher on the fly (more themes builtin)
-- window position (centered, corners, etc.)
-- audio implementation + audio player
-- fx for printed text within windows (typewriter, etc.)
-- collect licenses from 3rd party shaders
-- build window structure from json declaration
+- Window position (centered, corners, etc.)
+- Audio player
+- Fxs for printed text within windows (typewriter, etc.)
+- Collect licenses from 3rd party shaders
+- Build window structure from json declaration
 
 ## Live Show Previews   
 
