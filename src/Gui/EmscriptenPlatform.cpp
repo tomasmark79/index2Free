@@ -131,6 +131,14 @@ void EmscriptenPlatform::initialize () {
       this, 0, isInfiniteLoop);
 }
 
+int EmscriptenPlatform::getShaderTarget () {
+  if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
+    return static_cast<int> (ShaderTarget::WebGL2);
+  } else {
+    return static_cast<int> (ShaderTarget::WebGL1);
+  }
+}
+
 void EmscriptenPlatform::mainLoop () {
   // For Emscripten: Single iteration - called by emscripten_set_main_loop_arg
   this->updateWindowSize ();
@@ -168,12 +176,4 @@ void EmscriptenPlatform::mainLoop () {
   renderBackground (totalTime); // Pass cumulative time, not delta
   ImGui_ImplOpenGL3_RenderDrawData (ImGui::GetDrawData ());
   SDL_GL_SwapWindow (window_);
-}
-
-int EmscriptenPlatform::getShaderTarget () {
-  if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
-    return static_cast<int> (ShaderTarget::WebGL2);
-  } else {
-    return static_cast<int> (ShaderTarget::WebGL1);
-  }
 }

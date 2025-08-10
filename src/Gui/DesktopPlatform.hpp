@@ -8,10 +8,9 @@ class DesktopPlatform : public PlatformManager {
 public:
   DesktopPlatform () = default;
   ~DesktopPlatform () override = default;
-
   virtual void initialize () override;
 
-protected:
+private:
   virtual void updateWindowSize () override;
   virtual void mainLoop () override;
 };

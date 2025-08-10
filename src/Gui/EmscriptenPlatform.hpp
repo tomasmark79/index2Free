@@ -18,22 +18,17 @@ namespace EmscriptenDisplayInfo {
 enum class WebGLVersion { WEBGL1 = 1, WEBGL2 = 2 };
 
 class EmscriptenPlatform : public PlatformManager {
-
 public:
   EmscriptenPlatform () = default;
   ~EmscriptenPlatform () override = default;
+  WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;
+  virtual void initialize () override;
 
 private:
   WebGLVersion detectWebGLVersionByJS ();
   virtual void decideOpenGLVersionForEmscripten () override;
   virtual void updateWindowSize () override;
-
-public:
-  virtual void initialize () override;
   virtual int getShaderTarget () override;
-  WebGLVersion currentWebGLVersion_ = WebGLVersion::WEBGL1;
-
-private:
   virtual void mainLoop () override;
 };
 

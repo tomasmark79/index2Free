@@ -1,7 +1,6 @@
 #ifndef __PHOSPHOR3_H__
 #define __PHOSPHOR3_H__
 
-
 const char* fragmentShaderToyPhosphor3 = R"(
 /*
     "Phosphor 3" by @XorDev
@@ -51,6 +50,5 @@ void mainImage(out vec4 O, vec2 I)
     O = tanh(O/5e3);
 }
 )";
-
 
 #endif // __PHOSPHOR3_H__
