@@ -51,16 +51,19 @@ EM_JS(bool, isMobileDeviceJS, (), {
 
 } // namespace CustomJS
 
-bool EmscriptenDisplayInfo::isScaled () const {
-  return devicePixelRatio > 1.0f;
-}
+namespace EmscriptenDisplayInfo {
 
-float EmscriptenDisplayInfo::getEffectiveScale () const {
-  return isScaled () ? devicePixelRatio : 1.0f;
-}
+  bool DisplayInfo::isScaled () const {
+    return devicePixelRatio > 1.0f;
+  }
 
-void EmscriptenDisplayInfo::update () {
-  CustomJS::getDisplayInfoJS (&devicePixelRatio, &windowWidth, &windowHeight);
+  float DisplayInfo::getEffectiveScale () const {
+    return isScaled () ? devicePixelRatio : 1.0f;
+  }
+
+  void DisplayInfo::update () {
+    CustomJS::getDisplayInfoJS (&devicePixelRatio, &windowWidth, &windowHeight);
+  }
 }
 
 WebGLVersion EmscriptenPlatform::detectWebGLVersionByJS () {
@@ -87,10 +90,6 @@ void EmscriptenPlatform::decideOpenGLVersionForEmscripten () {
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    
-    // Additional attributes for hardware acceleration
-    SDL_GL_SetAttribute (SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute (SDL_GL_ALPHA_SIZE, 0);
   } else {
     // GL ES 2.0 + GLSL 100 (WebGL 1.0)
     glsl_version_ = "#version 100";
@@ -117,38 +116,19 @@ void EmscriptenPlatform::initialize () {
   currentWebGLVersion_ = detectWebGLVersionByJS ();
   const bool isInfiniteLoop = true; // Emscripten main loop runs indefinitely
   createSDL2Window ("Emscripten SDL2 Window", windowWidth_, windowHeight_);
-  
-  // IMPORTANT: Set GLSL version BEFORE creating any OpenGL context or initializing ImGui
-  decideOpenGLVersion();
-    
+  createOpenGLContext (1);
   setupQuad ();
   setupShaders ();
-  
-  // Log GLSL version before ImGui initialization
-  LOG_I_STREAM << "🔧 Using GLSL version for ImGui: " << glsl_version_ << std::endl;
-  
   initializeImGui ();
   updateWindowSize ();
   scaleImGui (this->userScaleFactor);
   initInputHandlerCallbacks ();
-  // Set up main loop with error handling for Chrome compatibility
-  try {
-    emscripten_set_main_loop_arg (
-        [] (void* userData) {
-          EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
-          platform->mainLoop ();
-        },
-        this, 0, isInfiniteLoop);
-  } catch (...) {
-    LOG_W_STREAM << "⚠️ Main loop setup failed, trying alternative approach" << std::endl;
-    // Alternative setup without timing constraints
-    emscripten_set_main_loop_arg (
-        [] (void* userData) {
-          EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
-          platform->mainLoop ();
-        },
-        this, -1, isInfiniteLoop);
-  }
+  emscripten_set_main_loop_arg (
+      [] (void* userData) {
+        EmscriptenPlatform* platform = static_cast<EmscriptenPlatform*> (userData);
+        platform->mainLoop ();
+      },
+      this, 0, isInfiniteLoop);
 }
 
 void EmscriptenPlatform::mainLoop () {
@@ -190,4 +170,10 @@ void EmscriptenPlatform::mainLoop () {
   SDL_GL_SwapWindow (window_);
 }
 
-
+int EmscriptenPlatform::getShaderTarget () {
+  if (currentWebGLVersion_ == WebGLVersion::WEBGL2) {
+    return static_cast<int> (ShaderTarget::WebGL2);
+  } else {
+    return static_cast<int> (ShaderTarget::WebGL1);
+  }
+}

@@ -38,6 +38,7 @@ static std::unique_ptr<DesktopPlatform> gPlatform = nullptr;
 #include <Shaders/Shadertoy/Bubbles.hpp>
 #include <Shaders/Shadertoy/Chainy.hpp>
 #include <Shaders/Shadertoy/Dyinguniverse.hpp>
+#include <Shaders/Shadertoy/Phosphor3.hpp>
 
 // Function to initialize the platform
 void initializePlatform () {
@@ -83,14 +84,6 @@ void PlatformManager::createSDL2Window (const char* title, int width, int height
   SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute (SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute (SDL_GL_STENCIL_SIZE, 8);
-  
-#ifdef __EMSCRIPTEN__
-  // Emscripten specific attributes for hardware acceleration
-  SDL_GL_SetAttribute (SDL_GL_ACCELERATED_VISUAL, 1);
-  SDL_GL_SetAttribute (SDL_GL_ALPHA_SIZE, 0);  // Disable alpha for better performance
-  SDL_GL_SetAttribute (SDL_GL_MULTISAMPLEBUFFERS, 1);
-  SDL_GL_SetAttribute (SDL_GL_MULTISAMPLESAMPLES, 4);
-#endif
 
   SDL_WindowFlags windowFlags
       = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -126,7 +119,7 @@ void PlatformManager::createOpenGLContext (int swapInterval) {
 }
 
 void PlatformManager::setupShaders () {
-  int currentShader = 1;
+  int currentShader = 17;
   std::string shaderToUse;
   switch (currentShader) {
   case 0:
@@ -179,6 +172,9 @@ void PlatformManager::setupShaders () {
     break;
   case 16:
     shaderToUse = fragmentShaderToyDyingUniverse;
+    break;
+  case 17:
+    shaderToUse = fragmentShaderToyPhosphor3;
     break;
 
   default:
