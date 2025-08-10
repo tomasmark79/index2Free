@@ -6,11 +6,6 @@
 
 >refactored 90%
 
-Examples from development 
-
-## PrioToDo
-- fix chrome under Linux when Emscripten isn't using hardware acceleration
-
 ## ToDo
 - shader switcher on the fly
 - ImGui theme switcher on the fly (more themes builtin)
