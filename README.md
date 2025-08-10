@@ -4,6 +4,10 @@
 
 ## Index2
 
+### Structure
+
+Essentially, there is a main class called `PlatformManager` that manages the platform and its components. This class is responsible for initialization, configuration, and lifecycle management of the platform. Its children are `DesktopPlatform` and `EmscriptenPlatform`. Polymorphism is used for the method specifications of each platform.
+
 >refactored 90%
 
 ## ToDo
